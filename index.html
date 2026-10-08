@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de CMV · Mais Doce por Amor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant+Garamond:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --pink:#F9BFC0; --pink-soft:#FDE6E6; --pink-mid:#F6A9AC; --pink-deep:#E8868B;
+  --navy:#2B2C5E; --navy-soft:#4B4C82; --navy-faint:#E9E9F3;
+  --cream:#FFF9F8; --white:#fff; --text:#2B2C5E; --muted:#7A7A9A;
+  --warn-bg:#FFF4D6; --warn:#8A5A00; --ok:#2F7D5B;
+  --radius:18px; --shadow:0 10px 30px -12px rgba(43,44,94,.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Nunito',system-ui,sans-serif;color:var(--text);background:var(--cream);
+  background-image:radial-gradient(circle at 10% 0%,var(--pink-soft) 0,transparent 40%),radial-gradient(circle at 100% 30%,#fff0f0 0,transparent 35%);
+  min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+
+/* ---------- Header ---------- */
+header{background:var(--pink);padding:28px 16px 70px;text-align:center;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:40px;
+  background:var(--cream);border-radius:50% 50% 0 0 / 100% 100% 0 0}
+.brand-name{font-family:'Marcellus',serif;font-size:clamp(30px,6vw,52px);letter-spacing:.06em;color:var(--navy);margin:0;line-height:1}
+.brand-tag{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:.08em;font-size:clamp(15px,2.4vw,22px);color:var(--navy);margin:10px 0 0}
+.app-title{display:inline-flex;align-items:center;gap:10px;margin-top:18px;background:rgba(255,255,255,.55);
+  padding:8px 16px;border-radius:999px;font-weight:700;font-size:14px;letter-spacing:.02em}
+.badge{background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px;font-size:11px}
+.sprinkle{position:absolute;border-radius:999px;opacity:.55}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:8px;justify-content:center;margin:-34px auto 22px;position:relative;z-index:2;padding:0 16px;flex-wrap:wrap}
+.tab{border:0;background:var(--white);padding:11px 20px;border-radius:999px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);transition:.2s}
+.tab[aria-selected="true"]{background:var(--navy);color:#fff}
+.tab .count{background:var(--pink);color:var(--navy);border-radius:999px;padding:1px 8px;font-size:12px;margin-left:6px}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 60px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+@media (max-width:960px){.grid{grid-template-columns:1fr}.summary{position:static!important}}
+
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:22px;position:relative;
+  border:1px solid #f6e3e3;animation:rise .4s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.step-head{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.step-num{flex:none;width:40px;height:40px;border-radius:50%;background:var(--pink);color:var(--navy);display:grid;place-items:center;
+  font-family:'Marcellus',serif;font-size:20px}
+.step-head h2{font-family:'Marcellus',serif;font-weight:400;font-size:22px;margin:0;letter-spacing:.02em}
+.step-head p{margin:2px 0 0;color:var(--muted);font-size:14px}
+
+label.lbl{display:block;font-weight:700;font-size:13px;margin-bottom:6px;color:var(--navy-soft);text-transform:uppercase;letter-spacing:.05em}
+.input{width:100%;padding:11px 13px;border:1.5px solid #ecdede;border-radius:12px;background:#fffdfd;outline:none;transition:.15s}
+.input:focus{border-color:var(--pink-deep);box-shadow:0 0 0 4px var(--pink-soft)}
+.input.big{font-size:18px;font-weight:700;padding:14px 16px}
+.input.flag{border-color:#E7B342;background:#FFFCF2}
+
+/* ---------- Tables ---------- */
+.rows{display:flex;flex-direction:column;gap:10px}
+.row-head,.row{display:grid;gap:10px;align-items:center}
+.ing .row-head,.ing .row{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) 92px minmax(0,1.2fr) minmax(0,1.1fr) 38px}
+.emb .row-head,.emb .row{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.1fr) 38px}
+.row-head{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:0 2px}
+.row-wrap{background:#fffafa;border:1px dashed #f1d7d7;border-radius:14px;padding:10px}
+.cost{font-weight:800;text-align:right;padding-right:6px;white-space:nowrap}
+.del{border:0;background:transparent;width:38px;height:38px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:18px}
+.del:hover{background:var(--pink-soft);color:var(--navy)}
+.mlabel{display:none}
+.warn{display:none;margin-top:8px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.4}
+.warn.show{display:block}
+@media (max-width:720px){
+  .row-head{display:none}
+  .ing .row,.emb .row{grid-template-columns:1fr 1fr}
+  .row .c-name{grid-column:1/-1}
+  .mlabel{display:block;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+  .cost{text-align:left}
+}
+.add{margin-top:14px;border:2px dashed var(--pink-mid);background:transparent;color:var(--navy);border-radius:14px;padding:12px;width:100%;
+  font-weight:800;cursor:pointer;transition:.15s}
+.add:hover{background:var(--pink-soft)}
+
+.total{margin-top:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(120deg,var(--navy),var(--navy-soft));color:#fff;border-radius:16px;padding:16px 20px}
+.total span{font-size:14px;opacity:.9;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.total strong{font-family:'Marcellus',serif;font-size:30px;letter-spacing:.02em}
+.total.soft{background:var(--pink-soft);color:var(--navy)}
+
+/* ---------- Tooltip ---------- */
+.tip{position:relative;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;
+  font-size:13px;font-weight:800;cursor:help;vertical-align:middle;margin-left:6px;font-family:Georgia,serif;font-style:italic}
+.tip .bubble{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(6px);width:min(300px,80vw);
+  background:var(--navy);color:#fff;font-family:'Nunito',sans-serif;font-style:normal;font-weight:600;font-size:13px;line-height:1.5;
+  padding:12px 14px;border-radius:12px;opacity:0;pointer-events:none;transition:.18s;z-index:20;text-align:left;box-shadow:var(--shadow)}
+.tip .bubble::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:var(--navy)}
+.tip:hover .bubble,.tip:focus .bubble{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.price-line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;border-bottom:1px dashed #efdcdc;flex-wrap:wrap}
+.price-line:last-child{border-bottom:0}
+.formula{color:var(--muted);font-size:13px}
+.price{font-family:'Marcellus',serif;font-size:26px}
+
+.fees{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.fees{grid-template-columns:1fr}}
+.suffix{position:relative}
+.suffix .input{padding-right:34px}
+.suffix::after{content:"%";position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700}
+.note{background:var(--pink-soft);border-radius:14px;padding:12px 16px;font-size:14px;line-height:1.55;margin-top:14px}
+.note b{color:var(--navy)}
+
+.choice{display:flex;gap:12px;flex-wrap:wrap}
+.choice button{flex:1;min-width:140px;border:2px solid #ecdede;background:#fff;border-radius:14px;padding:14px;font-weight:800;cursor:pointer;transition:.15s}
+.choice button:hover{border-color:var(--pink-deep)}
+.choice button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.chip{background:var(--navy-faint);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700}
+
+/* ---------- Final ---------- */
+.final{background:linear-gradient(135deg,var(--pink) 0%,#fbd3d3 100%);border:0;text-align:center;padding:32px 24px}
+.final .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-weight:800;font-size:13px}
+.final .huge{font-family:'Marcellus',serif;font-size:clamp(36px,6vw,52px);margin:6px 0 4px;line-height:1.1}
+.finals{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+.finals>div{background:rgba(255,255,255,.55);border-radius:16px;padding:16px 10px}
+.finals>div:last-child{background:var(--navy);color:#fff}
+@media (max-width:640px){.finals{grid-template-columns:1fr}}
+.final .sub{font-size:14px;opacity:.85}
+.breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:20px;text-align:left}
+.breakdown div{background:rgba(255,255,255,.7);border-radius:12px;padding:10px 14px}
+.breakdown small{display:block;font-size:11px;text-transform:uppercase;font-weight:800;letter-spacing:.05em;opacity:.75}
+.breakdown b{font-size:17px}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;justify-content:center}
+.btn{border:0;border-radius:999px;padding:13px 22px;font-weight:800;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--navy);color:#fff}
+.btn.primary:hover{background:#1f2050}
+.btn.ghost{background:#fff;color:var(--navy);box-shadow:inset 0 0 0 2px var(--navy)}
+.btn.ghost:hover{background:var(--navy-faint)}
+.btn.danger{background:#fff;color:#a33;box-shadow:inset 0 0 0 2px #e5b5b5}
+
+/* ---------- Summary sidebar ---------- */
+.summary{position:sticky;top:16px}
+.summary h3{font-family:'Marcellus',serif;font-weight:400;font-size:20px;margin:0 0 4px}
+.summary .pname{color:var(--muted);font-size:14px;margin-bottom:12px;min-height:20px;word-break:break-word}
+.srow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f4e6e6;font-size:15px}
+.srow b{white-space:nowrap}
+.srow.hl{border:0;margin-top:8px;background:var(--navy);color:#fff;border-radius:12px;padding:12px 14px;font-size:16px}
+.progress{display:flex;gap:6px;margin:14px 0 4px}
+.progress i{flex:1;height:6px;border-radius:9px;background:#f1e1e1}
+.progress i.on{background:var(--pink-deep)}
+
+/* ---------- Saved list ---------- */
+.search{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.search .input{flex:1;min-width:200px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.item{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:18px;border-top:6px solid var(--pink);display:flex;flex-direction:column;gap:6px}
+.item h4{font-family:'Marcellus',serif;font-weight:400;font-size:20px;margin:0;word-break:break-word}
+.item .meta{color:var(--muted);font-size:13px}
+.item .vals{display:flex;justify-content:space-between;margin:8px 0;font-size:14px}
+.item .vals b{display:block;font-size:17px}
+.item .btns{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap}
+.item .btns .btn{padding:8px 14px;font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:50px 16px}
+.empty .big{font-family:'Marcellus',serif;font-size:24px;color:var(--navy);margin-bottom:6px}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:var(--navy);color:#fff;padding:13px 22px;
+  border-radius:999px;font-weight:700;box-shadow:var(--shadow);transition:.3s;z-index:50;max-width:calc(100% - 32px);text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="sprinkle" style="width:14px;height:5px;background:#fff;top:30px;left:12%;transform:rotate(30deg)"></span>
+  <span class="sprinkle" style="width:14px;height:5px;background:var(--navy);top:80px;left:20%;transform:rotate(-20deg);opacity:.25"></span>
+  <span class="sprinkle" style="width:14px;height:5px;background:#fff;top:50px;right:15%;transform:rotate(-40deg)"></span>
+  <span class="sprinkle" style="width:14px;height:5px;background:var(--navy);top:110px;right:22%;transform:rotate(60deg);opacity:.25"></span>
+  <h1 class="brand-name">ANA LOURENÇO</h1>
+  <p class="brand-tag">MAIS DOCE POR AMOR</p>
+  <div class="app-title">Calculadora de CMV · Ficha Técnica <span class="badge">v1.0</span></div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-view="calc">Nova ficha técnica</button>
+  <button class="tab" role="tab" aria-selected="false" data-view="saved">Minhas fichas <span class="count" id="savedCount">0</span></button>
+</nav>
+
+<main class="wrap">
+<!-- ================= CALCULADORA ================= -->
+<section id="view-calc">
+ <div class="grid">
+  <div>
+    <!-- Etapa 1 -->
+    <div class="card">
+      <div class="step-head"><div class="step-num">1</div><div><h2>Produto e ingredientes</h2><p>Monte a ficha técnica com tudo que vai na receita.</p></div></div>
+      <label class="lbl" for="produto">Nome do produto</label>
+      <input id="produto" class="input big" placeholder="Ex.: Bolo de pote de ninho com morango" autocomplete="off">
+      <div style="height:20px"></div>
+      <div class="ing">
+        <div class="row-head"><div>Ingrediente</div><div>Quantidade</div><div>Unidade</div><div>Valor do kg / lt / und</div><div style="text-align:right">Custo</div><div></div></div>
+        <div class="rows" id="ingRows"></div>
+      </div>
+      <button class="add" id="addIng">+ Adicionar ingrediente</button>
+      <div class="total"><span>Custo total dos ingredientes (CMV)</span><strong id="cmvTotal">R$ 0,00</strong></div>
+    </div>
+
+    <!-- Etapa 2 -->
+    <div class="card">
+      <div class="step-head"><div class="step-num">2</div><div><h2>Preço de venda no balcão</h2><p>Preço sugerido para venda direta na loja.</p></div></div>
+      <div class="price-line">
+        <div>
+          <strong>Preço de balcão</strong>
+          <span class="tip" tabindex="0">i<span class="bubble">Calculamos um preço de venda com <b>CMV de 30%</b>: o custo dos ingredientes representa 30% do preço final. Por isso dividimos o custo total por 0,3. Os outros 70% cobrem despesas fixas, mão de obra, impostos e o seu lucro.</span></span>
+          <div class="formula" id="balcaoFormula">Custo total ÷ 0,3</div>
+          <div class="formula">A embalagem é somada no final (etapa 5).</div>
+        </div>
+        <div class="price" id="balcaoPrice">R$ 0,00</div>
+      </div>
+    </div>
+
+    <!-- Etapa 3 -->
+    <div class="card">
+      <div class="step-head"><div class="step-num">3</div><div><h2>Preço de venda no iFood</h2><p>Taxas cobradas pela plataforma.</p></div></div>
+      <div class="fees">
+        <div><label class="lbl" for="feeCom">Comissão iFood</label><div class="suffix"><input id="feeCom" class="input" inputmode="decimal" value="12"></div></div>
+        <div><label class="lbl" for="feePag">Taxa pagto. online</label><div class="suffix"><input id="feePag" class="input" inputmode="decimal" value="3,49"></div></div>
+        <div><label class="lbl" for="feeAnt">Taxa de antecipação</label><div class="suffix"><input id="feeAnt" class="input" inputmode="decimal" value="1,99"></div></div>
+      </div>
+      <div class="warn" id="feeWarn"></div>
+      <div class="note" id="feeNote"></div>
+      <div class="price-line">
+        <div><strong>Preço iFood (com taxas)</strong><div class="formula" id="ifoodFormula"></div></div>
+        <div class="price" id="ifoodBase">R$ 0,00</div>
+      </div>
+      <button class="btn ghost" id="resetFees" style="margin-top:6px;padding:9px 16px;font-size:13px">Restaurar padrão do plano básico</button>
+    </div>
+
+    <!-- Etapa 4 -->
+    <div class="card">
+      <div class="step-head"><div class="step-num">4</div><div><h2>Alavancas do iFood</h2><p>Você usa alguma alavanca de vendas?</p></div></div>
+      <div class="chips"><span class="chip">Taxa grátis</span><span class="chip">Campanha inteligente</span><span class="chip">Hits</span></div>
+      <div class="choice">
+        <button id="alavSim" aria-pressed="false">Sim, uso alavancas</button>
+        <button id="alavNao" aria-pressed="false">Não uso</button>
+      </div>
+      <div class="price-line" id="alavLine" hidden>
+        <div><strong>Preço iFood com alavancas</strong><div class="formula" id="alavFormula"></div></div>
+        <div class="price" id="ifoodAlav">R$ 0,00</div>
+      </div>
+      <div class="note" id="alavNoteNo" hidden>Sem alavancas: seguimos para o custo das embalagens. 👇</div>
+    </div>
+
+    <!-- Etapa 5 -->
+    <div class="card">
+      <div class="step-head"><div class="step-num">5</div><div><h2>Custo das embalagens</h2><p>Potes, caixas, sacolas, colheres, etiquetas…</p></div></div>
+      <div class="note" style="margin:0 0 16px">
+        <b>Por que a embalagem entra só no final?</b> Se ela fosse somada junto com os ingredientes, inflaria o CMV — e ao dividir por 0,3 o preço poderia ficar
+        fora do valor praticado pelo mercado. Além disso, você estaria <b>lucrando em cima da embalagem</b>, o que não é correto. Por isso o custo dela é somado
+        aos preços finais de <b>balcão e iFood</b> pelo valor exato, sem margem.
+      </div>
+      <div class="emb">
+        <div class="row-head"><div>Tipo da embalagem</div><div>Quantidade</div><div>Valor unitário</div><div style="text-align:right">Custo</div><div></div></div>
+        <div class="rows" id="embRows"></div>
+      </div>
+      <button class="add" id="addEmb">+ Adicionar embalagem</button>
+      <div class="total soft"><span>Custo total das embalagens</span><strong id="embTotal">R$ 0,00</strong></div>
+    </div>
+
+    <!-- Resultado -->
+    <div class="card final">
+      <div class="finals">
+        <div>
+          <div class="eyebrow">Preço de venda no balcão</div>
+          <div class="huge" id="finalBalcao">R$ 0,00</div>
+        </div>
+        <div>
+          <div class="eyebrow">Preço de venda no iFood</div>
+          <div class="huge" id="finalPrice">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="sub" id="finalSub">Preencha os ingredientes para calcular</div>
+      <div class="breakdown">
+        <div><small>CMV ingredientes</small><b id="bkCmv">R$ 0,00</b></div>
+        <div><small>Balcão (CMV 30%)</small><b id="bkBalcao">R$ 0,00</b></div>
+        <div><small>iFood (taxas<span id="bkAlavLbl"></span>)</small><b id="bkIfood">R$ 0,00</b></div>
+        <div><small>+ Embalagens</small><b id="bkEmb">R$ 0,00</b></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="saveBtn">💾 Salvar ficha</button>
+        <button class="btn ghost" id="pdfBtn">📄 Exportar PDF</button>
+        <button class="btn ghost" id="newBtn">✨ Nova ficha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumo lateral -->
+  <aside class="card summary">
+    <h3>Resumo</h3>
+    <div class="pname" id="sumName">Produto sem nome</div>
+    <div class="srow"><span>CMV ingredientes</span><b id="sumCmv">R$ 0,00</b></div>
+    <div class="srow"><span>Balcão (CMV 30%)</span><b id="sumBalcao">R$ 0,00</b></div>
+    <div class="srow"><span>iFood c/ taxas</span><b id="sumIfood">R$ 0,00</b></div>
+    <div class="srow"><span>Alavancas</span><b id="sumAlav">—</b></div>
+    <div class="srow"><span>Embalagens</span><b id="sumEmb">R$ 0,00</b></div>
+    <div class="srow hl" style="background:var(--pink);color:var(--navy)"><span>Preço balcão final</span><b id="sumBalcaoFinal">R$ 0,00</b></div>
+    <div class="srow hl" style="margin-top:6px"><span>Preço iFood final</span><b id="sumFinal">R$ 0,00</b></div>
+    <div class="progress" id="progress"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="formula" id="progressTxt">Etapa 1 de 5</div>
+  </aside>
+ </div>
+</section>
+
+<!-- ================= FICHAS SALVAS ================= -->
+<section id="view-saved" hidden>
+  <div class="card">
+    <div class="step-head"><div class="step-num">❤</div><div><h2>Minhas fichas técnicas</h2><p>Todas as fichas salvas neste navegador.</p></div></div>
+    <div class="search">
+      <input id="filter" class="input" placeholder="🔎 Filtrar por nome do produto…" autocomplete="off">
+      <button class="btn ghost" id="backupBtn">⬇ Backup</button>
+      <button class="btn ghost" id="restoreBtn">⬆ Restaurar</button>
+      <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+</section>
+</main>
+
+<footer>Calculadora de CMV v1.0 · feita com carinho para Mais Doce por Amor</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const KEY = 'cmv_fichas_v1';
+  const DEF_FEES = { com: 12, pag: 3.49, ant: 1.99 };
+  const $ = s => document.querySelector(s);
+  const brl = v => (isFinite(v) ? v : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const pct = v => (isFinite(v) ? v : 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + '%';
+  const numStr = v => (v === '' || v == null || !isFinite(v)) ? '' : String(v).replace('.', ',');
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function parseNum(s) {
+    if (typeof s === 'number') return s;
+    s = String(s ?? '').trim().replace(/\s|R\$/g, '');
+    if (!s) return NaN;
+    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(',', '.');
+    return parseFloat(s);
+  }
+  const n0 = s => { const v = parseNum(s); return isFinite(v) ? v : 0; };
+
+  // ---------- Estado ----------
+  let state;
+  function blank() {
+    return { id: null, produto: '', ing: [{ nome: '', qtd: '', un: 'kg', valor: '' }],
+      fees: { com: '12', pag: '3,49', ant: '1,99' }, alav: null, emb: [{ nome: '', qtd: '', valor: '' }] };
+  }
+
+  // ---------- Banco de dados (localStorage) ----------
+  function loadDb() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
+  function saveDb(db) {
+    try { localStorage.setItem(KEY, JSON.stringify(db)); return true; }
+    catch { toast('Não foi possível salvar neste navegador.'); return false; }
+  }
+
+  // ---------- Travas (avisos de valores exorbitantes) ----------
+  function ingWarn(r) {
+    const q = parseNum(r.qtd), v = parseNum(r.valor), msgs = [];
+    const unLbl = { kg: 'kg', lt: 'litros', und: 'unidades' }[r.un];
+    if (r.un === 'kg' && q > 10) msgs.push(`Você informou <b>${numStr(q)} kg</b>. Confira a unidade de medida: se forem ${numStr(q)} gramas, digite <b>${numStr(+(q / 1000).toFixed(4))}</b> (ex.: 300 g = 0,3 kg).`);
+    if (r.un === 'lt' && q > 10) msgs.push(`Você informou <b>${numStr(q)} litros</b>. Confira a unidade de medida: se forem ${numStr(q)} ml, digite <b>${numStr(+(q / 1000).toFixed(4))}</b> (ex.: 200 ml = 0,2 lt).`);
+    if (r.un === 'und' && q > 200) msgs.push(`Você informou <b>${numStr(q)} unidades</b>. Esse número está correto? Reconfira a unidade de medida.`);
+    if ((r.un === 'kg' || r.un === 'lt') && v > 500) msgs.push(`Valor de <b>${brl(v)}</b> por ${r.un === 'kg' ? 'kg' : 'litro'} parece alto. Confira se digitou o preço do kg/litro (e não de várias embalagens).`);
+    if (r.un === 'und' && v > 300) msgs.push(`Valor de <b>${brl(v)}</b> por unidade parece alto. Reconfira o valor e a unidade de medida.`);
+    if (q < 0 || v < 0) msgs.push('Valores negativos não são permitidos.');
+    return msgs;
+  }
+  function embWarn(r) {
+    const q = parseNum(r.qtd), v = parseNum(r.valor), msgs = [];
+    if (q > 50) msgs.push(`Você informou <b>${numStr(q)} embalagens</b> para um único produto. Reconfira a quantidade.`);
+    if (v > 50) msgs.push(`Valor unitário de <b>${brl(v)}</b> parece alto para uma embalagem. Confira se não digitou o preço do pacote inteiro (divida pelo número de unidades).`);
+    if (q < 0 || v < 0) msgs.push('Valores negativos não são permitidos.');
+    return msgs;
+  }
+
+  // ---------- Cálculos ----------
+  function calc(s = state) {
+    const cost = r => Math.max(0, n0(r.qtd)) * Math.max(0, n0(r.valor));
+    const cmv = s.ing.reduce((a, r) => a + cost(r), 0);
+    const balcao = cmv / 0.3;
+    const feeSum = n0(s.fees.com) + n0(s.fees.pag) + n0(s.fees.ant);
+    const feeRound = Math.min(95, Math.ceil(feeSum - 1e-9));
+    const ifood = balcao / (1 - feeRound / 100);
+    const ifoodAlav = s.alav === true ? ifood / 0.88 : ifood;
+    const emb = s.emb.reduce((a, r) => a + cost(r), 0);
+    return { cmv, balcao, feeSum, feeRound, ifood, ifoodAlav, emb, balcaoFinal: balcao + emb, final: ifoodAlav + emb, cost };
+  }
+
+  // ---------- Renderização das linhas ----------
+  function renderIng() {
+    const box = $('#ingRows'); box.innerHTML = '';
+    state.ing.forEach((r, i) => {
+      const el = document.createElement('div'); el.className = 'row-wrap';
+      el.innerHTML = `
+        <div class="row">
+          <div class="c-name"><span class="mlabel">Ingrediente</span><input class="input" data-f="nome" placeholder="Ex.: Leite condensado" value="${esc(r.nome)}"></div>
+          <div><span class="mlabel">Quantidade</span><input class="input" data-f="qtd" inputmode="decimal" placeholder="0,3" value="${esc(r.qtd)}"></div>
+          <div><span class="mlabel">Unidade</span><select class="input" data-f="un">
+            <option value="kg"${r.un === 'kg' ? ' selected' : ''}>kg</option>
+            <option value="lt"${r.un === 'lt' ? ' selected' : ''}>lt</option>
+            <option value="und"${r.un === 'und' ? ' selected' : ''}>und</option></select></div>
+          <div><span class="mlabel" data-vlabel>Valor do ${r.un}</span><input class="input" data-f="valor" inputmode="decimal" placeholder="R$ por ${r.un}" value="${esc(r.valor)}"></div>
+          <div><span class="mlabel">Custo</span><div class="cost" data-cost>R$ 0,00</div></div>
+          <button class="del" title="Remover">✕</button>
+        </div>
+        <div class="warn" data-warn></div>`;
+      el.addEventListener('input', e => {
+        const f = e.target.dataset.f; if (!f) return;
+        r[f] = e.target.value;
+        if (f === 'un') { el.querySelector('[data-f=valor]').placeholder = 'R$ por ' + r.un; el.querySelector('[data-vlabel]').textContent = 'Valor do ' + r.un; }
+        update();
+      });
+      el.querySelector('.del').onclick = () => {
+        if (state.ing.length === 1) state.ing[0] = { nome: '', qtd: '', un: 'kg', valor: '' };
+        else state.ing.splice(i, 1);
+        renderIng(); update();
+      };
+      r._el = el; box.appendChild(el);
+    });
+  }
+  function renderEmb() {
+    const box = $('#embRows'); box.innerHTML = '';
+    state.emb.forEach((r, i) => {
+      const el = document.createElement('div'); el.className = 'row-wrap';
+      el.innerHTML = `
+        <div class="row">
+          <div class="c-name"><span class="mlabel">Tipo da embalagem</span><input class="input" data-f="nome" placeholder="Ex.: Pote 250 ml com tampa" value="${esc(r.nome)}"></div>
+          <div><span class="mlabel">Quantidade</span><input class="input" data-f="qtd" inputmode="decimal" placeholder="1" value="${esc(r.qtd)}"></div>
+          <div><span class="mlabel">Valor unitário</span><input class="input" data-f="valor" inputmode="decimal" placeholder="R$ 0,00" value="${esc(r.valor)}"></div>
+          <div><span class="mlabel">Custo</span><div class="cost" data-cost>R$ 0,00</div></div>
+          <button class="del" title="Remover">✕</button>
+        </div>
+        <div class="warn" data-warn></div>`;
+      el.addEventListener('input', e => { const f = e.target.dataset.f; if (f) { r[f] = e.target.value; update(); } });
+      el.querySelector('.del').onclick = () => {
+        if (state.emb.length === 1) state.emb[0] = { nome: '', qtd: '', valor: '' };
+        else state.emb.splice(i, 1);
+        renderEmb(); update();
+      };
+      r._el = el; box.appendChild(el);
+    });
+  }
+  function rowFeedback(rows, warnFn, c) {
+    rows.forEach(r => {
+      if (!r._el) return;
+      r._el.querySelector('[data-cost]').textContent = brl(c.cost(r));
+      const msgs = warnFn(r), w = r._el.querySelector('[data-warn]');
+      w.innerHTML = msgs.map(m => '⚠️ ' + m).join('<br>');
+      w.classList.toggle('show', msgs.length > 0);
+      const q = parseNum(r.qtd), v = parseNum(r.valor);
+      r._el.querySelector('[data-f=qtd]').classList.toggle('flag', msgs.some(m => /quantidade|unidade de medida|embalagens<\/b>/i.test(m)) && q > 0);
+      r._el.querySelector('[data-f=valor]').classList.toggle('flag', msgs.some(m => /parece alto/.test(m)) && v > 0);
+    });
+  }
+
+  // ---------- Atualização geral ----------
+  function update() {
+    const c = calc();
+    rowFeedback(state.ing, ingWarn, c);
+    rowFeedback(state.emb, embWarn, c);
+
+    $('#cmvTotal').textContent = brl(c.cmv);
+    $('#balcaoPrice').textContent = brl(c.balcao);
+    $('#balcaoFormula').textContent = `${brl(c.cmv)} ÷ 0,3 (CMV de 30%)`;
+
+    // taxas
+    const fw = [];
+    [['com', 'Comissão'], ['pag', 'Taxa de pagamento'], ['ant', 'Taxa de antecipação']].forEach(([k, l]) => {
+      const v = parseNum(state.fees[k]);
+      $('#fee' + { com: 'Com', pag: 'Pag', ant: 'Ant' }[k]).classList.toggle('flag', v > 30 || v < 0);
+      if (v > 30) fw.push(`${l} de <b>${pct(v)}</b> parece muito alta. Digite apenas o número do percentual (ex.: 12 para 12%).`);
+      if (v < 0) fw.push(`${l} não pode ser negativa.`);
+    });
+    $('#feeWarn').innerHTML = fw.map(m => '⚠️ ' + m).join('<br>');
+    $('#feeWarn').classList.toggle('show', fw.length > 0);
+    const isDefault = n0(state.fees.com) === DEF_FEES.com && n0(state.fees.pag) === DEF_FEES.pag && n0(state.fees.ant) === DEF_FEES.ant;
+    $('#feeNote').innerHTML = isDefault
+      ? `<b>Padrão do plano básico do iFood:</b> 12% de comissão + 3,49% de pagamento online + 1,99% de antecipação = 17,48%, que <b>arredondamos para 18%</b>. Por isso dividimos o preço de balcão por <b>0,82</b>.`
+      : `Taxas informadas: ${pct(c.feeSum)} → arredondado para <b>${c.feeRound}%</b>. Dividimos o preço de balcão por <b>${numStr(+(1 - c.feeRound / 100).toFixed(2))}</b>.`;
+    $('#ifoodBase').textContent = brl(c.ifood);
+    $('#ifoodFormula').textContent = `${brl(c.balcao)} ÷ ${numStr(+(1 - c.feeRound / 100).toFixed(2))} (+${c.feeRound}%)`;
+
+    // alavancas
+    $('#alavSim').setAttribute('aria-pressed', state.alav === true);
+    $('#alavNao').setAttribute('aria-pressed', state.alav === false);
+    $('#alavLine').hidden = state.alav !== true;
+    $('#alavNoteNo').hidden = state.alav !== false;
+    $('#ifoodAlav').textContent = brl(c.ifoodAlav);
+    $('#alavFormula').textContent = `${brl(c.ifood)} ÷ 0,88 (+12% para custear as alavancas)`;
+
+    $('#embTotal').textContent = brl(c.emb);
+
+    // resultado
+    $('#finalPrice').textContent = brl(c.final);
+    $('#finalBalcao').textContent = brl(c.balcaoFinal);
+    $('#finalSub').textContent = c.cmv > 0
+      ? `${state.produto.trim() || 'Produto sem nome'} · iFood ${state.alav === true ? 'com' : 'sem'} alavancas · embalagem inclusa a preço de custo nos dois preços`
+      : 'Preencha os ingredientes para calcular';
+    $('#bkCmv').textContent = brl(c.cmv);
+    $('#bkBalcao').textContent = brl(c.balcao);
+    $('#bkIfood').textContent = brl(c.ifoodAlav);
+    $('#bkAlavLbl').textContent = state.alav === true ? ' + alavancas' : '';
+    $('#bkEmb').textContent = brl(c.emb);
+
+    // resumo
+    $('#sumName').textContent = state.produto.trim() || 'Produto sem nome';
+    $('#sumCmv').textContent = brl(c.cmv);
+    $('#sumBalcao').textContent = brl(c.balcao);
+    $('#sumIfood').textContent = brl(c.ifood);
+    $('#sumAlav').textContent = state.alav === true ? '+12% (sim)' : state.alav === false ? 'Não usa' : '—';
+    $('#sumEmb').textContent = brl(c.emb);
+    $('#sumFinal').textContent = brl(c.final);
+    $('#sumBalcaoFinal').textContent = brl(c.balcaoFinal);
+
+    const done = [c.cmv > 0, c.cmv > 0, c.cmv > 0 && c.feeSum > 0, state.alav !== null, c.emb > 0];
+    document.querySelectorAll('#progress i').forEach((el, i) => el.classList.toggle('on', done[i]));
+    const next = done.indexOf(false);
+    $('#progressTxt').textContent = next === -1 ? 'Ficha completa ✓' : `Próxima etapa: ${next + 1} de 5`;
+  }
+
+  // ---------- Eventos ----------
+  $('#produto').addEventListener('input', e => { state.produto = e.target.value; update(); });
+  $('#addIng').onclick = () => { state.ing.push({ nome: '', qtd: '', un: 'kg', valor: '' }); renderIng(); update(); state.ing.at(-1)._el.querySelector('input').focus(); };
+  $('#addEmb').onclick = () => { state.emb.push({ nome: '', qtd: '', valor: '' }); renderEmb(); update(); state.emb.at(-1)._el.querySelector('input').focus(); };
+  [['feeCom', 'com'], ['feePag', 'pag'], ['feeAnt', 'ant']].forEach(([id, k]) =>
+    $('#' + id).addEventListener('input', e => { state.fees[k] = e.target.value; update(); }));
+  $('#resetFees').onclick = () => { state.fees = { com: '12', pag: '3,49', ant: '1,99' }; fillFees(); update(); };
+  $('#alavSim').onclick = () => { state.alav = true; update(); };
+  $('#alavNao').onclick = () => { state.alav = false; update(); };
+
+  function fillFees() { $('#feeCom').value = state.fees.com; $('#feePag').value = state.fees.pag; $('#feeAnt').value = state.fees.ant; }
+  function loadState(s) {
+    state = JSON.parse(JSON.stringify(s));
+    $('#produto').value = state.produto; fillFees(); renderIng(); renderEmb(); update();
+  }
+  function clean(s) {
+    const strip = r => { const { _el, ...rest } = r; return rest; };
+    return { ...s, ing: s.ing.map(strip), emb: s.emb.map(strip) };
+  }
+  function hasData() { return state.produto.trim() || state.ing.some(r => r.nome || r.qtd || r.valor); }
+
+  // salvar
+  $('#saveBtn').onclick = () => {
+    const name = state.produto.trim();
+    if (!name) { toast('Dê um nome ao produto antes de salvar.'); $('#produto').focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (calc().cmv <= 0) { toast('Preencha pelo menos um ingrediente com quantidade e valor.'); return; }
+    const db = loadDb(), c = calc(), now = new Date().toISOString();
+    const rec = { ...clean(state), id: state.id || uid(), updatedAt: now, resultado: { cmv: c.cmv, balcao: c.balcaoFinal, ifood: c.final, emb: c.emb } };
+    const idx = db.findIndex(x => x.id === rec.id);
+    if (idx >= 0) { rec.createdAt = db[idx].createdAt; db[idx] = rec; } else { rec.createdAt = now; db.unshift(rec); }
+    if (saveDb(db)) { state.id = rec.id; refreshCount(); toast(idx >= 0 ? 'Ficha atualizada ✓' : 'Ficha salva ✓'); }
+  };
+  $('#newBtn').onclick = () => {
+    if (hasData() && !confirm('Começar uma nova ficha? Alterações não salvas serão perdidas.')) return;
+    loadState(blank()); window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ---------- PDF ----------
+  $('#pdfBtn').onclick = () => exportPdf(state);
+  function exportPdf(s) {
+    const c = calc(s);
+    if (!window.jspdf || !window.jspdf.jsPDF) { toast('Gerador de PDF indisponível (sem internet?). Abrindo impressão…'); setTimeout(() => window.print(), 600); return; }
+    const { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth(), NAVY = [43, 44, 94], PINK = [249, 191, 192], SOFT = [253, 230, 230];
+    doc.setFillColor(...PINK); doc.rect(0, 0, W, 38, 'F');
+    doc.setTextColor(...NAVY); doc.setFont('times', 'normal'); doc.setFontSize(24);
+    doc.text('ANA LOURENÇO', W / 2, 17, { align: 'center' });
+    doc.setFontSize(11); doc.text('MAIS DOCE POR AMOR', W / 2, 25, { align: 'center', charSpace: 0.8 });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text('Ficha técnica · Calculadora de CMV v1.0', W / 2, 32, { align: 'center' });
+
+    let y = 50;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.text(s.produto.trim() || 'Produto sem nome', 14, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 150);
+    doc.text('Gerado em ' + new Date().toLocaleString('pt-BR'), 14, y + 6);
+    y += 12;
+
+    const tbl = { theme: 'grid', headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold' },
+      styles: { fontSize: 9.5, textColor: NAVY, lineColor: [240, 220, 220] }, alternateRowStyles: { fillColor: [255, 249, 248] },
+      footStyles: { fillColor: SOFT, textColor: NAVY, fontStyle: 'bold' }, margin: { left: 14, right: 14 } };
+    const ing = s.ing.filter(r => r.nome || n0(r.qtd) || n0(r.valor));
+    doc.autoTable({ ...tbl, startY: y,
+      head: [['Ingrediente', 'Quantidade', 'Unid.', 'Valor kg/lt/und', 'Custo']],
+      body: ing.map(r => [r.nome || '-', numStr(n0(r.qtd)), r.un, brl(n0(r.valor)), brl(c.cost(r))]),
+      foot: [[{ content: 'Custo total dos ingredientes (CMV)', colSpan: 4 }, brl(c.cmv)]],
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'center' }, 3: { halign: 'right' }, 4: { halign: 'right' } } });
+    y = doc.lastAutoTable.finalY + 8;
+
+    const emb = s.emb.filter(r => r.nome || n0(r.qtd) || n0(r.valor));
+    if (emb.length) {
+      doc.autoTable({ ...tbl, startY: y,
+        head: [['Embalagem', 'Quantidade', 'Valor unitário', 'Custo']],
+        body: emb.map(r => [r.nome || '-', numStr(n0(r.qtd)), brl(n0(r.valor)), brl(c.cost(r))]),
+        foot: [[{ content: 'Custo total das embalagens', colSpan: 3 }, brl(c.emb)]],
+        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } } });
+      y = doc.lastAutoTable.finalY + 8;
+    }
+
+    const div = numStr(+(1 - c.feeRound / 100).toFixed(2));
+    const body = [
+      ['CMV dos ingredientes', 'Soma dos custos', brl(c.cmv)],
+      ['Preço de venda no balcão', `CMV ÷ 0,3 (CMV de 30%)`, brl(c.balcao)],
+      ['Preço iFood com taxas', `Balcão ÷ ${div} (comissão ${pct(n0(s.fees.com))} + pagto. ${pct(n0(s.fees.pag))} + antecip. ${pct(n0(s.fees.ant))} ≈ ${c.feeRound}%)`, brl(c.ifood)],
+      ['Alavancas iFood', s.alav === true ? 'Sim: ÷ 0,88 (+12%)' : 'Não utiliza', brl(c.ifoodAlav)],
+      ['Embalagens', 'Somadas a preço de custo (balcão e iFood)', '+ ' + brl(c.emb)]
+    ];
+    doc.autoTable({ ...tbl, startY: y, head: [['Etapa', 'Cálculo', 'Valor']], body,
+      foot: [[{ content: 'PREÇO DE VENDA NO BALCÃO (com embalagem)', colSpan: 2 }, brl(c.balcaoFinal)],
+             [{ content: 'PREÇO DE VENDA NO IFOOD (com embalagem)', colSpan: 2 }, brl(c.final)]],
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 48 }, 2: { halign: 'right', cellWidth: 32 } } });
+    y = doc.lastAutoTable.finalY + 10;
+
+    const H = doc.internal.pageSize.getHeight();
+    if (y > H - 30) { doc.addPage(); y = 20; }
+    doc.setFillColor(...SOFT); doc.roundedRect(14, y, W - 28, 18, 3, 3, 'F');
+    doc.setTextColor(...NAVY); doc.setFontSize(8.5);
+    doc.text(doc.splitTextToSize('A embalagem é somada apenas no final e pelo valor de custo: se entrasse junto com os ingredientes, inflaria o CMV, deixaria o preço fora do mercado e geraria lucro sobre a embalagem.', W - 36), 18, y + 6);
+
+    const file = 'Ficha tecnica - ' + (s.produto.trim() || 'produto').replace(/[\\/:*?"<>|]/g, '') + '.pdf';
+    doc.save(file);
+    toast('PDF gerado ✓');
+  }
+
+  // ---------- Fichas salvas ----------
+  function refreshCount() { $('#savedCount').textContent = loadDb().length; }
+  function renderList() {
+    const q = $('#filter').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const db = loadDb().filter(x => (x.produto || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q));
+    const box = $('#list');
+    if (!db.length) {
+      box.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${loadDb().length ? 'Nenhuma ficha encontrada' : 'Nenhuma ficha salva ainda'}</div>${loadDb().length ? 'Tente outro nome no filtro.' : 'Crie sua primeira ficha técnica na aba “Nova ficha técnica”.'}</div>`;
+      return;
+    }
+    box.innerHTML = db.map(x => {
+      const c = calc(x);
+      return `<div class="item">
+        <h4>${esc(x.produto)}</h4>
+        <div class="meta">Atualizada em ${new Date(x.updatedAt).toLocaleDateString('pt-BR')} · ${x.ing.filter(r => r.nome).length} ingrediente(s)</div>
+        <div class="vals"><div>CMV<b>${brl(c.cmv)}</b></div><div>Balcão<b>${brl(c.balcaoFinal)}</b></div><div>iFood<b>${brl(c.final)}</b></div></div>
+        <div class="btns">
+          <button class="btn primary" data-act="open" data-id="${x.id}">Abrir</button>
+          <button class="btn ghost" data-act="pdf" data-id="${x.id}">PDF</button>
+          <button class="btn ghost" data-act="dup" data-id="${x.id}">Duplicar</button>
+          <button class="btn danger" data-act="del" data-id="${x.id}">Excluir</button>
+        </div></div>`;
+    }).join('');
+  }
+  $('#filter').addEventListener('input', renderList);
+  $('#list').addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const db = loadDb(), rec = db.find(x => x.id === b.dataset.id); if (!rec) return;
+    if (b.dataset.act === 'open') { loadState(rec); show('calc'); toast('Ficha carregada: ' + rec.produto); }
+    if (b.dataset.act === 'pdf') exportPdf(rec);
+    if (b.dataset.act === 'dup') { loadState({ ...rec, id: null, produto: rec.produto + ' (cópia)' }); show('calc'); toast('Cópia criada — salve para guardar.'); }
+    if (b.dataset.act === 'del' && confirm(`Excluir a ficha “${rec.produto}”?`)) {
+      saveDb(db.filter(x => x.id !== rec.id)); if (state.id === rec.id) state.id = null;
+      refreshCount(); renderList(); toast('Ficha excluída');
+    }
+  });
+
+  // backup / restaurar
+  $('#backupBtn').onclick = () => {
+    const blob = new Blob([JSON.stringify(loadDb(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'backup-fichas-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  $('#restoreBtn').onclick = () => $('#restoreFile').click();
+  $('#restoreFile').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!Array.isArray(data)) throw 0;
+      const db = loadDb(), ids = new Set(db.map(x => x.id));
+      const novas = data.filter(x => x && x.id && Array.isArray(x.ing) && !ids.has(x.id));
+      saveDb([...novas, ...db]); refreshCount(); renderList(); toast(`${novas.length} ficha(s) restaurada(s)`);
+    } catch { toast('Arquivo de backup inválido.'); }
+    e.target.value = '';
+  };
+
+  // ---------- Navegação ----------
+  function show(v) {
+    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === v));
+    $('#view-calc').hidden = v !== 'calc'; $('#view-saved').hidden = v !== 'saved';
+    if (v === 'saved') renderList();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => show(t.dataset.view));
+
+  let tt;
+  function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); }
+
+  loadState(blank()); refreshCount();
+})();
+</script>
+</body>
+</html>
