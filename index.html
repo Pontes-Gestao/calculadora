@@ -237,26 +237,48 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
         <div class="rows" id="ingRows"></div>
       </div>
       <button class="add" id="addIng">+ Adicionar ingrediente</button>
-      <div class="total"><span>Custo total dos ingredientes (CMV)</span><strong id="cmvTotal">R$ 0,00</strong></div>
+      <div class="total"><span>Custo total da receita</span><strong id="cmvTotal">R$ 0,00</strong></div>
     </div>
 
     <!-- Etapa 2 -->
     <div class="card">
-      <div class="step-head"><div class="step-num">2</div><div><h2>Preço de venda no balcão</h2><p>Preço sugerido para venda direta na loja.</p></div></div>
-      <div class="price-line">
-        <div>
-          <strong>Preço de balcão</strong>
-          <span class="tip" tabindex="0">i<span class="bubble">Calculamos um preço de venda com <b>CMV de 30%</b>: o custo dos ingredientes representa 30% do preço final. Por isso dividimos o custo total por 0,3. Os outros 70% cobrem despesas fixas, mão de obra, impostos e o seu lucro.</span></span>
-          <div class="formula" id="balcaoFormula">Custo total ÷ 0,3</div>
-          <div class="formula">A embalagem é somada no final (etapa 5).</div>
-        </div>
-        <div class="price" id="balcaoPrice">R$ 0,00</div>
+      <div class="step-head"><div class="step-num">2</div><div><h2>Rendimento da receita</h2><p>Precisa dividir a receita?</p></div></div>
+      <div class="note" style="margin:0 0 16px">
+        Se a ficha técnica é de uma receita que rende várias porções — por exemplo, <b>um bolo que rende 8 fatias</b> — e você vende
+        por fatia, o custo precisa ser <b>dividido por 8</b>. Se você vende o produto inteiro, calcule inteiro.
+      </div>
+      <div class="choice">
+        <button id="divSim" aria-pressed="false">Sim, dividir a receita</button>
+        <button id="divNao" aria-pressed="false">Não, calcular inteiro</button>
+      </div>
+      <div id="divBox" hidden style="margin-top:16px">
+        <label class="lbl" for="divN">A receita rende quantas porções?</label>
+        <input id="divN" class="input big" inputmode="numeric" placeholder="Ex.: 8" autocomplete="off" style="max-width:220px">
+        <div class="warn" id="divWarn"></div>
+      </div>
+      <div class="price-line" id="divLine" hidden>
+        <div><strong>Custo por porção (CMV)</strong><div class="formula" id="divFormula"></div></div>
+        <div class="price" id="cmvPorcao">R$ 0,00</div>
       </div>
     </div>
 
     <!-- Etapa 3 -->
     <div class="card">
-      <div class="step-head"><div class="step-num">3</div><div><h2>Preço de venda no iFood</h2><p>Taxas cobradas pela plataforma.</p></div></div>
+      <div class="step-head"><div class="step-num">3</div><div><h2>Preço de venda no balcão</h2><p>Preço sugerido para venda direta na loja.</p></div></div>
+      <div class="price-line">
+        <div>
+          <strong>Preço de balcão</strong>
+          <span class="tip" tabindex="0">i<span class="bubble">Calculamos um preço de venda com <b>CMV de 30%</b>: o custo dos ingredientes representa 30% do preço final. Por isso dividimos o custo total por 0,3. Os outros 70% cobrem despesas fixas, mão de obra, impostos e o seu lucro.</span></span>
+          <div class="formula" id="balcaoFormula">Custo total ÷ 0,3</div>
+          <div class="formula">A embalagem é somada no final (etapa 6).</div>
+        </div>
+        <div class="price" id="balcaoPrice">R$ 0,00</div>
+      </div>
+    </div>
+
+    <!-- Etapa 4 -->
+    <div class="card">
+      <div class="step-head"><div class="step-num">4</div><div><h2>Preço de venda no iFood</h2><p>Taxas cobradas pela plataforma.</p></div></div>
       <div class="fees">
         <div><label class="lbl" for="feeCom">Comissão iFood</label><div class="suffix"><input id="feeCom" class="input" inputmode="decimal" value="12"></div></div>
         <div><label class="lbl" for="feePag">Taxa pagto. online</label><div class="suffix"><input id="feePag" class="input" inputmode="decimal" value="3,49"></div></div>
@@ -271,9 +293,9 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
       <button class="btn ghost" id="resetFees" style="margin-top:6px;padding:9px 16px;font-size:13px">Restaurar padrão do plano básico</button>
     </div>
 
-    <!-- Etapa 4 -->
+    <!-- Etapa 5 -->
     <div class="card">
-      <div class="step-head"><div class="step-num">4</div><div><h2>Alavancas do iFood</h2><p>Você usa alguma alavanca de vendas?</p></div></div>
+      <div class="step-head"><div class="step-num">5</div><div><h2>Alavancas do iFood</h2><p>Você usa alguma alavanca de vendas?</p></div></div>
       <div class="chips"><span class="chip">Taxa grátis</span><span class="chip">Campanha inteligente</span><span class="chip">Hits</span></div>
       <div class="choice">
         <button id="alavSim" aria-pressed="false">Sim, uso alavancas</button>
@@ -286,9 +308,9 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
       <div class="note" id="alavNoteNo" hidden>Sem alavancas: seguimos para o custo das embalagens. 👇</div>
     </div>
 
-    <!-- Etapa 5 -->
+    <!-- Etapa 6 -->
     <div class="card">
-      <div class="step-head"><div class="step-num">5</div><div><h2>Custo das embalagens</h2><p>Potes, caixas, sacolas, colheres, etiquetas…</p></div></div>
+      <div class="step-head"><div class="step-num">6</div><div><h2>Custo das embalagens</h2><p id="embSub">Potes, caixas, sacolas, colheres, etiquetas…</p></div></div>
       <div class="note" style="margin:0 0 16px">
         <b>Por que a embalagem entra só no final?</b> Se ela fosse somada junto com os ingredientes, inflaria o CMV — e ao dividir por 0,3 o preço poderia ficar
         fora do valor praticado pelo mercado. Além disso, você estaria <b>lucrando em cima da embalagem</b>, o que não é correto. Por isso o custo dela é somado
@@ -334,14 +356,15 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
     <h3>Resumo</h3>
     <div class="pname" id="sumName">Produto sem nome</div>
     <div class="srow"><span>CMV ingredientes</span><b id="sumCmv">R$ 0,00</b></div>
+    <div class="srow"><span>Rendimento</span><b id="sumDiv">—</b></div>
     <div class="srow"><span>Balcão (CMV 30%)</span><b id="sumBalcao">R$ 0,00</b></div>
     <div class="srow"><span>iFood c/ taxas</span><b id="sumIfood">R$ 0,00</b></div>
     <div class="srow"><span>Alavancas</span><b id="sumAlav">—</b></div>
     <div class="srow"><span>Embalagens</span><b id="sumEmb">R$ 0,00</b></div>
     <div class="srow hl" style="background:var(--pink);color:var(--navy)"><span>Preço balcão final</span><b id="sumBalcaoFinal">R$ 0,00</b></div>
     <div class="srow hl" style="margin-top:6px"><span>Preço iFood final</span><b id="sumFinal">R$ 0,00</b></div>
-    <div class="progress" id="progress"><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="formula" id="progressTxt">Etapa 1 de 5</div>
+    <div class="progress" id="progress"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="formula" id="progressTxt">Etapa 1 de 6</div>
   </aside>
  </div>
 </section>
@@ -389,7 +412,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
   let state;
   function blank() {
     return { id: null, produto: '', ing: [{ nome: '', qtd: '', un: 'kg', valor: '' }],
-      fees: { com: '12', pag: '3,49', ant: '1,99' }, alav: null, emb: [{ nome: '', qtd: '', valor: '' }] };
+      div: { on: null, n: '' }, fees: { com: '12', pag: '3,49', ant: '1,99' }, alav: null, emb: [{ nome: '', qtd: '', valor: '' }] };
   }
 
   // ---------- Nuvem (Supabase) ----------
@@ -475,14 +498,17 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
   // ---------- Cálculos ----------
   function calc(s = state) {
     const cost = r => Math.max(0, n0(r.qtd)) * Math.max(0, n0(r.valor));
-    const cmv = s.ing.reduce((a, r) => a + cost(r), 0);
+    const receita = s.ing.reduce((a, r) => a + cost(r), 0);
+    // Fichas antigas (sem "div") são calculadas inteiras.
+    const porcoes = s.div?.on === true && n0(s.div.n) >= 1 ? n0(s.div.n) : 1;
+    const cmv = receita / porcoes;
     const balcao = cmv / 0.3;
     const feeSum = n0(s.fees.com) + n0(s.fees.pag) + n0(s.fees.ant);
     const feeRound = Math.min(95, Math.ceil(feeSum - 1e-9));
     const ifood = balcao / (1 - feeRound / 100);
     const ifoodAlav = s.alav === true ? ifood / 0.88 : ifood;
     const emb = s.emb.reduce((a, r) => a + cost(r), 0);
-    return { cmv, balcao, feeSum, feeRound, ifood, ifoodAlav, emb, balcaoFinal: balcao + emb, final: ifoodAlav + emb, cost };
+    return { receita, porcoes, cmv, balcao, feeSum, feeRound, ifood, ifoodAlav, emb, balcaoFinal: balcao + emb, final: ifoodAlav + emb, cost };
   }
 
   // ---------- Renderização das linhas ----------
@@ -558,9 +584,30 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
     rowFeedback(state.ing, ingWarn, c);
     rowFeedback(state.emb, embWarn, c);
 
-    $('#cmvTotal').textContent = brl(c.cmv);
+    $('#cmvTotal').textContent = brl(c.receita);
+
+    // rendimento
+    const dv = state.div, dn = parseNum(dv.n), dividido = c.porcoes > 1 || (dv.on === true && dn === 1);
+    $('#divSim').setAttribute('aria-pressed', dv.on === true);
+    $('#divNao').setAttribute('aria-pressed', dv.on === false);
+    $('#divBox').hidden = dv.on !== true;
+    const dw = [];
+    if (dv.on === true && String(dv.n).trim() !== '') {
+      if (!(dn >= 1)) dw.push('Informe um número de porções igual ou maior que 1.');
+      else if (dn > 200) dw.push(`<b>${numStr(dn)} porções</b> é bastante. Confira se o rendimento está correto.`);
+      else if (!Number.isInteger(dn)) dw.push('O rendimento costuma ser um número inteiro de porções (ex.: 8 fatias). Confira o valor.');
+    }
+    $('#divWarn').innerHTML = dw.map(m => '⚠️ ' + m).join('<br>');
+    $('#divWarn').classList.toggle('show', dw.length > 0);
+    $('#divN').classList.toggle('flag', dw.length > 0);
+    $('#divLine').hidden = !dividido;
+    $('#cmvPorcao').textContent = brl(c.cmv);
+    $('#divFormula').textContent = `${brl(c.receita)} ÷ ${numStr(c.porcoes)} porções`;
+    const porcao = dividido ? ' por porção' : '';
+
     $('#balcaoPrice').textContent = brl(c.balcao);
-    $('#balcaoFormula').textContent = `${brl(c.cmv)} ÷ 0,3 (CMV de 30%)`;
+    $('#balcaoFormula').textContent = `${brl(c.cmv)} ÷ 0,3 (CMV de 30%)${porcao}`;
+    $('#embSub').textContent = dividido ? 'Informe a embalagem de UMA porção (ex.: 1 caixinha por fatia).' : 'Potes, caixas, sacolas, colheres, etiquetas…';
 
     // taxas
     const fw = [];
@@ -593,7 +640,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
     $('#finalPrice').textContent = brl(c.final);
     $('#finalBalcao').textContent = brl(c.balcaoFinal);
     $('#finalSub').textContent = c.cmv > 0
-      ? `${state.produto.trim() || 'Produto sem nome'} · iFood ${state.alav === true ? 'com' : 'sem'} alavancas · embalagem inclusa a preço de custo nos dois preços`
+      ? `${state.produto.trim() || 'Produto sem nome'}${dividido ? ` · preço por porção (receita ÷ ${numStr(c.porcoes)})` : ''} · iFood ${state.alav === true ? 'com' : 'sem'} alavancas · embalagem inclusa a preço de custo nos dois preços`
       : 'Preencha os ingredientes para calcular';
     $('#bkCmv').textContent = brl(c.cmv);
     $('#bkBalcao').textContent = brl(c.balcao);
@@ -604,6 +651,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
     // resumo
     $('#sumName').textContent = state.produto.trim() || 'Produto sem nome';
     $('#sumCmv').textContent = brl(c.cmv);
+    $('#sumDiv').textContent = dividido ? `÷ ${numStr(c.porcoes)} porções` : dv.on === false ? 'Inteira' : '—';
     $('#sumBalcao').textContent = brl(c.balcao);
     $('#sumIfood').textContent = brl(c.ifood);
     $('#sumAlav').textContent = state.alav === true ? '+12% (sim)' : state.alav === false ? 'Não usa' : '—';
@@ -611,10 +659,10 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
     $('#sumFinal').textContent = brl(c.final);
     $('#sumBalcaoFinal').textContent = brl(c.balcaoFinal);
 
-    const done = [c.cmv > 0, c.cmv > 0, c.cmv > 0 && c.feeSum > 0, state.alav !== null, c.emb > 0];
+    const done = [c.cmv > 0, dv.on === false || (dv.on === true && dn >= 1), c.cmv > 0, c.cmv > 0 && c.feeSum > 0, state.alav !== null, c.emb > 0];
     document.querySelectorAll('#progress i').forEach((el, i) => el.classList.toggle('on', done[i]));
     const next = done.indexOf(false);
-    $('#progressTxt').textContent = next === -1 ? 'Ficha completa ✓' : `Próxima etapa: ${next + 1} de 5`;
+    $('#progressTxt').textContent = next === -1 ? 'Ficha completa ✓' : `Próxima etapa: ${next + 1} de 6`;
   }
 
   // ---------- Eventos ----------
@@ -626,11 +674,15 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
   $('#resetFees').onclick = () => { state.fees = { com: '12', pag: '3,49', ant: '1,99' }; fillFees(); update(); };
   $('#alavSim').onclick = () => { state.alav = true; update(); };
   $('#alavNao').onclick = () => { state.alav = false; update(); };
+  $('#divSim').onclick = () => { state.div.on = true; update(); $('#divN').focus(); };
+  $('#divNao').onclick = () => { state.div.on = false; update(); };
+  $('#divN').addEventListener('input', e => { state.div.n = e.target.value; update(); });
 
   function fillFees() { $('#feeCom').value = state.fees.com; $('#feePag').value = state.fees.pag; $('#feeAnt').value = state.fees.ant; }
   function loadState(s) {
     state = JSON.parse(JSON.stringify(s));
-    $('#produto').value = state.produto; fillFees(); renderIng(); renderEmb(); update();
+    if (!state.div) state.div = { on: false, n: '' }; // fichas salvas antes desta etapa = receita inteira
+    $('#produto').value = state.produto; $('#divN').value = state.div.n; fillFees(); renderIng(); renderEmb(); update();
   }
   function clean(s) {
     const strip = r => { const { _el, ...rest } = r; return rest; };
@@ -683,7 +735,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
     doc.autoTable({ ...tbl, startY: y,
       head: [['Ingrediente', 'Quantidade', 'Unid.', 'Valor kg/lt/und', 'Custo']],
       body: ing.map(r => [r.nome || '-', numStr(n0(r.qtd)), r.un, brl(n0(r.valor)), brl(c.cost(r))]),
-      foot: [[{ content: 'Custo total dos ingredientes (CMV)', colSpan: 4 }, brl(c.cmv)]],
+      foot: [[{ content: 'Custo total da receita', colSpan: 4 }, brl(c.receita)]],
       columnStyles: { 1: { halign: 'right' }, 2: { halign: 'center' }, 3: { halign: 'right' }, 4: { halign: 'right' } } });
     y = doc.lastAutoTable.finalY + 8;
 
@@ -699,7 +751,9 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
 
     const div = numStr(+(1 - c.feeRound / 100).toFixed(2));
     const body = [
-      ['CMV dos ingredientes', 'Soma dos custos', brl(c.cmv)],
+      c.porcoes > 1
+        ? ['CMV por porção', `Custo da receita ÷ ${numStr(c.porcoes)} porções`, brl(c.cmv)]
+        : ['CMV dos ingredientes', 'Receita inteira', brl(c.cmv)],
       ['Preço de venda no balcão', `CMV ÷ 0,3 (CMV de 30%)`, brl(c.balcao)],
       ['Preço iFood com taxas', `Balcão ÷ ${div} (comissão ${pct(n0(s.fees.com))} + pagto. ${pct(n0(s.fees.pag))} + antecip. ${pct(n0(s.fees.ant))} ≈ ${c.feeRound}%)`, brl(c.ifood)],
       ['Alavancas iFood', s.alav === true ? 'Sim: ÷ 0,88 (+12%)' : 'Não utiliza', brl(c.ifoodAlav)],
@@ -740,7 +794,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
       return `<div class="item">
         <h4>${esc(x.produto)}</h4>
         <div class="meta">Atualizada em ${new Date(x.updatedAt).toLocaleDateString('pt-BR')} · ${x.ing.filter(r => r.nome).length} ingrediente(s)</div>
-        <div class="vals"><div>CMV<b>${brl(c.cmv)}</b></div><div>Balcão<b>${brl(c.balcaoFinal)}</b></div><div>iFood<b>${brl(c.final)}</b></div></div>
+        <div class="vals"><div>CMV${c.porcoes > 1 ? '/porção' : ''}<b>${brl(c.cmv)}</b></div><div>Balcão<b>${brl(c.balcaoFinal)}</b></div><div>iFood<b>${brl(c.final)}</b></div></div>
         <div class="btns">
           <button class="btn primary" data-act="open" data-id="${esc(x.id)}">Abrir</button>
           <button class="btn ghost" data-act="pdf" data-id="${esc(x.id)}">PDF</button>
