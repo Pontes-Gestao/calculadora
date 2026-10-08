@@ -418,8 +418,8 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
   // ---------- Nuvem (Supabase) ----------
   // Preencha com os dados do projeto (Supabase → Project Settings → API).
   // Em branco = modo local (fichas só neste navegador, como na v1).
-  const SUPABASE_URL = '';  // ex.: https://abcdefgh.supabase.co
-  const SUPABASE_KEY = '';  // chave pública "anon" ou "publishable" (nunca a service_role/secret)
+  const SUPABASE_URL = 'https://ygxxlavwcpkssqmdrxsr.supabase.co';  // ex.: https://abcdefgh.supabase.co
+  const SUPABASE_KEY = 'sb_publishable_cCMTCJ8zjGODfgZ17gNnHA_UAbiMFjc';  // chave pública "anon" ou "publishable" (nunca a service_role/secret)
   const CLOUD = !!(SUPABASE_URL && SUPABASE_KEY);
   const authHash = new URLSearchParams(location.hash.slice(1)); // links de convite / redefinição de senha
   const sb = CLOUD && window.supabase
