@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant+Garamond:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <style>
 :root{
   --pink:#F9BFC0; --pink-soft:#FDE6E6; --pink-mid:#F6A9AC; --pink-deep:#E8868B;
@@ -170,6 +171,15 @@ label.lbl{display:block;font-weight:700;font-size:13px;margin-bottom:6px;color:v
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:var(--navy);color:#fff;padding:13px 22px;
   border-radius:999px;font-weight:700;box-shadow:var(--shadow);transition:.3s;z-index:50;max-width:calc(100% - 32px);text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
+/* ---------- Login / conta ---------- */
+.auth{max-width:440px;margin:0 auto 22px}
+.auth form{display:flex;flex-direction:column;gap:14px}
+.auth .btn{justify-content:center}
+.linkbtn{border:0;background:none;color:var(--navy-soft);font-weight:700;text-decoration:underline;cursor:pointer;padding:4px;align-self:center}
+.userbar{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;font-size:13px;font-weight:700;flex-wrap:wrap}
+.userbar span{word-break:break-all}
+.userbar button{border:0;background:var(--navy);color:#fff;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:800;cursor:pointer}
+.btn[disabled]{opacity:.6;cursor:wait}
 footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30px}
 [hidden]{display:none!important}
 </style>
@@ -183,15 +193,35 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
   <span class="sprinkle" style="width:14px;height:5px;background:var(--navy);top:110px;right:22%;transform:rotate(60deg);opacity:.25"></span>
   <h1 class="brand-name">ANA LOURENÇO</h1>
   <p class="brand-tag">MAIS DOCE POR AMOR</p>
-  <div class="app-title">Calculadora de CMV · Ficha Técnica <span class="badge">v1.0</span></div>
+  <div class="app-title">Calculadora de CMV · Ficha Técnica <span class="badge">v2.0</span></div>
+  <div class="userbar" id="userBar" hidden><span id="userEmail"></span><button id="logoutBtn">Sair</button></div>
 </header>
 
-<nav class="tabs" role="tablist">
+<nav class="tabs" role="tablist" id="tabs">
   <button class="tab" role="tab" aria-selected="true" data-view="calc">Nova ficha técnica</button>
   <button class="tab" role="tab" aria-selected="false" data-view="saved">Minhas fichas <span class="count" id="savedCount">0</span></button>
 </nav>
 
 <main class="wrap">
+<!-- ================= LOGIN ================= -->
+<section id="view-login" hidden>
+  <div class="card auth">
+    <div class="step-head"><div class="step-num">🔒</div><div><h2 id="authTitle">Entrar</h2><p id="authSub">Acesse suas fichas técnicas no computador e no celular.</p></div></div>
+    <form id="loginForm">
+      <div><label class="lbl" for="loginEmail">E-mail</label><input id="loginEmail" class="input" type="email" autocomplete="email" required></div>
+      <div><label class="lbl" for="loginPwd">Senha</label><input id="loginPwd" class="input" type="password" autocomplete="current-password" required></div>
+      <button class="btn primary" id="loginBtn" type="submit">Entrar</button>
+      <button class="linkbtn" id="forgotBtn" type="button">Esqueci minha senha</button>
+    </form>
+    <form id="pwdForm" hidden>
+      <div><label class="lbl" for="newPwd">Nova senha</label><input id="newPwd" class="input" type="password" autocomplete="new-password" minlength="6" required></div>
+      <div><label class="lbl" for="newPwd2">Repita a nova senha</label><input id="newPwd2" class="input" type="password" autocomplete="new-password" minlength="6" required></div>
+      <button class="btn primary" id="pwdBtn" type="submit">Salvar senha e entrar</button>
+    </form>
+    <div class="note" id="authMsg" hidden></div>
+  </div>
+</section>
+
 <!-- ================= CALCULADORA ================= -->
 <section id="view-calc">
  <div class="grid">
@@ -319,7 +349,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
 <!-- ================= FICHAS SALVAS ================= -->
 <section id="view-saved" hidden>
   <div class="card">
-    <div class="step-head"><div class="step-num">❤</div><div><h2>Minhas fichas técnicas</h2><p>Todas as fichas salvas neste navegador.</p></div></div>
+    <div class="step-head"><div class="step-num">❤</div><div><h2>Minhas fichas técnicas</h2><p id="savedSub">Todas as fichas salvas neste navegador.</p></div></div>
     <div class="search">
       <input id="filter" class="input" placeholder="🔎 Filtrar por nome do produto…" autocomplete="off">
       <button class="btn ghost" id="backupBtn">⬇ Backup</button>
@@ -331,7 +361,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
 </section>
 </main>
 
-<footer>Calculadora de CMV v1.0 · feita com carinho para Mais Doce por Amor</footer>
+<footer id="footer">Calculadora de CMV v2.0 · feita com carinho para Mais Doce por Amor</footer>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -362,11 +392,64 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
       fees: { com: '12', pag: '3,49', ant: '1,99' }, alav: null, emb: [{ nome: '', qtd: '', valor: '' }] };
   }
 
-  // ---------- Banco de dados (localStorage) ----------
-  function loadDb() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
-  function saveDb(db) {
-    try { localStorage.setItem(KEY, JSON.stringify(db)); return true; }
-    catch { toast('Não foi possível salvar neste navegador.'); return false; }
+  // ---------- Nuvem (Supabase) ----------
+  // Preencha com os dados do projeto (Supabase → Project Settings → API).
+  // Em branco = modo local (fichas só neste navegador, como na v1).
+  const SUPABASE_URL = '';  // ex.: https://abcdefgh.supabase.co
+  const SUPABASE_KEY = '';  // chave pública "anon" ou "publishable" (nunca a service_role/secret)
+  const CLOUD = !!(SUPABASE_URL && SUPABASE_KEY);
+  const authHash = new URLSearchParams(location.hash.slice(1)); // links de convite / redefinição de senha
+  const sb = CLOUD && window.supabase
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'implicit', persistSession: true, detectSessionInUrl: true } })
+    : null;
+  let user = null;
+
+  // ---------- Banco de dados (cache em memória + nuvem ou localStorage) ----------
+  let db = [];
+  function readLocal() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
+  function writeLocal(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); return true; } catch { return false; } }
+  const validRec = x => x && typeof x.id === 'string' && Array.isArray(x.ing) && Array.isArray(x.emb);
+  const toRow = r => ({ user_id: user.id, id: r.id, produto: r.produto || '', dados: r, created_at: r.createdAt, updated_at: r.updatedAt });
+  const byDate = (a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
+
+  async function fetchDb() {
+    if (!CLOUD) { db = readLocal(); return true; }
+    const { data, error } = await sb.from('fichas').select('dados').order('updated_at', { ascending: false });
+    if (error) { toast('Não foi possível carregar as fichas da nuvem. Verifique a internet.'); return false; }
+    db = data.map(x => x.dados).filter(validRec); return true;
+  }
+  async function putRec(rec) {
+    if (CLOUD) {
+      const { error } = await sb.from('fichas').upsert(toRow(rec), { onConflict: 'user_id,id' });
+      if (error) { toast('Não foi possível salvar na nuvem. Verifique a internet e tente de novo.'); return false; }
+    }
+    const next = [rec, ...db.filter(x => x.id !== rec.id)];
+    if (!CLOUD && !writeLocal(next)) { toast('Não foi possível salvar neste navegador.'); return false; }
+    db = next; return true;
+  }
+  async function delRec(id) {
+    if (CLOUD) {
+      const { error } = await sb.from('fichas').delete().eq('id', id);
+      if (error) { toast('Não foi possível excluir. Verifique a internet e tente de novo.'); return false; }
+    }
+    const next = db.filter(x => x.id !== id);
+    if (!CLOUD && !writeLocal(next)) return false;
+    db = next; return true;
+  }
+  // Acrescenta fichas que ainda não existem (restaurar backup / migração). Retorna quantas entraram, ou -1 em erro.
+  async function addRecs(list) {
+    const ids = new Set(db.map(x => x.id)), now = new Date().toISOString();
+    const novas = list.filter(x => validRec(x) && !ids.has(x.id))
+      .map(x => ({ ...x, createdAt: x.createdAt || now, updatedAt: x.updatedAt || now }));
+    if (!novas.length) return 0;
+    if (CLOUD) {
+      const { error } = await sb.from('fichas').upsert(novas.map(toRow), { onConflict: 'user_id,id', ignoreDuplicates: true });
+      if (error) return -1;
+      await fetchDb(); return novas.length;
+    }
+    const next = [...novas, ...db];
+    if (!writeLocal(next)) return -1;
+    db = next; return novas.length;
   }
 
   // ---------- Travas (avisos de valores exorbitantes) ----------
@@ -556,15 +639,18 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
   function hasData() { return state.produto.trim() || state.ing.some(r => r.nome || r.qtd || r.valor); }
 
   // salvar
-  $('#saveBtn').onclick = () => {
+  $('#saveBtn').onclick = async () => {
     const name = state.produto.trim();
     if (!name) { toast('Dê um nome ao produto antes de salvar.'); $('#produto').focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (calc().cmv <= 0) { toast('Preencha pelo menos um ingrediente com quantidade e valor.'); return; }
-    const db = loadDb(), c = calc(), now = new Date().toISOString();
+    const c = calc(), now = new Date().toISOString();
     const rec = { ...clean(state), id: state.id || uid(), updatedAt: now, resultado: { cmv: c.cmv, balcao: c.balcaoFinal, ifood: c.final, emb: c.emb } };
-    const idx = db.findIndex(x => x.id === rec.id);
-    if (idx >= 0) { rec.createdAt = db[idx].createdAt; db[idx] = rec; } else { rec.createdAt = now; db.unshift(rec); }
-    if (saveDb(db)) { state.id = rec.id; refreshCount(); toast(idx >= 0 ? 'Ficha atualizada ✓' : 'Ficha salva ✓'); }
+    const old = db.find(x => x.id === rec.id);
+    rec.createdAt = old ? old.createdAt : now;
+    const btn = $('#saveBtn'); btn.disabled = true; btn.textContent = '⏳ Salvando…';
+    const ok = await putRec(rec);
+    btn.disabled = false; btn.textContent = '💾 Salvar ficha';
+    if (ok) { state.id = rec.id; refreshCount(); toast(old ? 'Ficha atualizada ✓' : 'Ficha salva ✓'); }
   };
   $('#newBtn').onclick = () => {
     if (hasData() && !confirm('Começar uma nova ficha? Alterações não salvas serão perdidas.')) return;
@@ -582,7 +668,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
     doc.setTextColor(...NAVY); doc.setFont('times', 'normal'); doc.setFontSize(24);
     doc.text('ANA LOURENÇO', W / 2, 17, { align: 'center' });
     doc.setFontSize(11); doc.text('MAIS DOCE POR AMOR', W / 2, 25, { align: 'center', charSpace: 0.8 });
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text('Ficha técnica · Calculadora de CMV v1.0', W / 2, 32, { align: 'center' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text('Ficha técnica · Calculadora de CMV v2.0', W / 2, 32, { align: 'center' });
 
     let y = 50;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.text(s.produto.trim() || 'Produto sem nome', 14, y);
@@ -637,45 +723,51 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
   }
 
   // ---------- Fichas salvas ----------
-  function refreshCount() { $('#savedCount').textContent = loadDb().length; }
+  let listLoading = false;
+  function refreshCount() { $('#savedCount').textContent = db.length; }
   function renderList() {
     const q = $('#filter').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    const db = loadDb().filter(x => (x.produto || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q));
+    const found = db.filter(x => (x.produto || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q)).sort(byDate);
     const box = $('#list');
-    if (!db.length) {
-      box.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${loadDb().length ? 'Nenhuma ficha encontrada' : 'Nenhuma ficha salva ainda'}</div>${loadDb().length ? 'Tente outro nome no filtro.' : 'Crie sua primeira ficha técnica na aba “Nova ficha técnica”.'}</div>`;
+    if (!found.length) {
+      box.innerHTML = listLoading && !db.length
+        ? `<div class="empty" style="grid-column:1/-1"><div class="big">Carregando suas fichas…</div></div>`
+        : `<div class="empty" style="grid-column:1/-1"><div class="big">${db.length ? 'Nenhuma ficha encontrada' : 'Nenhuma ficha salva ainda'}</div>${db.length ? 'Tente outro nome no filtro.' : 'Crie sua primeira ficha técnica na aba “Nova ficha técnica”.'}</div>`;
       return;
     }
-    box.innerHTML = db.map(x => {
+    box.innerHTML = found.map(x => {
       const c = calc(x);
       return `<div class="item">
         <h4>${esc(x.produto)}</h4>
         <div class="meta">Atualizada em ${new Date(x.updatedAt).toLocaleDateString('pt-BR')} · ${x.ing.filter(r => r.nome).length} ingrediente(s)</div>
         <div class="vals"><div>CMV<b>${brl(c.cmv)}</b></div><div>Balcão<b>${brl(c.balcaoFinal)}</b></div><div>iFood<b>${brl(c.final)}</b></div></div>
         <div class="btns">
-          <button class="btn primary" data-act="open" data-id="${x.id}">Abrir</button>
-          <button class="btn ghost" data-act="pdf" data-id="${x.id}">PDF</button>
-          <button class="btn ghost" data-act="dup" data-id="${x.id}">Duplicar</button>
-          <button class="btn danger" data-act="del" data-id="${x.id}">Excluir</button>
+          <button class="btn primary" data-act="open" data-id="${esc(x.id)}">Abrir</button>
+          <button class="btn ghost" data-act="pdf" data-id="${esc(x.id)}">PDF</button>
+          <button class="btn ghost" data-act="dup" data-id="${esc(x.id)}">Duplicar</button>
+          <button class="btn danger" data-act="del" data-id="${esc(x.id)}">Excluir</button>
         </div></div>`;
     }).join('');
   }
   $('#filter').addEventListener('input', renderList);
-  $('#list').addEventListener('click', e => {
+  $('#list').addEventListener('click', async e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
-    const db = loadDb(), rec = db.find(x => x.id === b.dataset.id); if (!rec) return;
+    const rec = db.find(x => x.id === b.dataset.id); if (!rec) return;
     if (b.dataset.act === 'open') { loadState(rec); show('calc'); toast('Ficha carregada: ' + rec.produto); }
     if (b.dataset.act === 'pdf') exportPdf(rec);
     if (b.dataset.act === 'dup') { loadState({ ...rec, id: null, produto: rec.produto + ' (cópia)' }); show('calc'); toast('Cópia criada — salve para guardar.'); }
     if (b.dataset.act === 'del' && confirm(`Excluir a ficha “${rec.produto}”?`)) {
-      saveDb(db.filter(x => x.id !== rec.id)); if (state.id === rec.id) state.id = null;
-      refreshCount(); renderList(); toast('Ficha excluída');
+      b.disabled = true;
+      if (await delRec(rec.id)) {
+        if (state.id === rec.id) state.id = null;
+        refreshCount(); renderList(); toast('Ficha excluída');
+      } else b.disabled = false;
     }
   });
 
   // backup / restaurar
   $('#backupBtn').onclick = () => {
-    const blob = new Blob([JSON.stringify(loadDb(), null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'backup-fichas-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
@@ -683,29 +775,126 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30p
   $('#restoreBtn').onclick = () => $('#restoreFile').click();
   $('#restoreFile').onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
-    try {
-      const data = JSON.parse(await f.text());
-      if (!Array.isArray(data)) throw 0;
-      const db = loadDb(), ids = new Set(db.map(x => x.id));
-      const novas = data.filter(x => x && x.id && Array.isArray(x.ing) && !ids.has(x.id));
-      saveDb([...novas, ...db]); refreshCount(); renderList(); toast(`${novas.length} ficha(s) restaurada(s)`);
-    } catch { toast('Arquivo de backup inválido.'); }
+    let data;
+    try { data = JSON.parse(await f.text()); if (!Array.isArray(data)) throw 0; }
+    catch { toast('Arquivo de backup inválido.'); e.target.value = ''; return; }
     e.target.value = '';
+    if (CLOUD) await fetchDb();
+    const n = await addRecs(data);
+    if (n < 0) { toast('Não foi possível restaurar. Verifique a internet e tente de novo.'); return; }
+    refreshCount(); renderList(); toast(`${n} ficha(s) restaurada(s)`);
   };
 
   // ---------- Navegação ----------
   function show(v) {
     document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === v));
-    $('#view-calc').hidden = v !== 'calc'; $('#view-saved').hidden = v !== 'saved';
-    if (v === 'saved') renderList();
+    $('#view-calc').hidden = v !== 'calc'; $('#view-saved').hidden = v !== 'saved'; $('#view-login').hidden = v !== 'login';
+    $('#tabs').hidden = v === 'login';
+    if (v === 'saved') {
+      renderList();
+      if (CLOUD) { listLoading = true; fetchDb().then(() => { listLoading = false; refreshCount(); renderList(); }); }
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   document.querySelectorAll('.tab').forEach(t => t.onclick = () => show(t.dataset.view));
 
   let tt;
-  function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); }
+  function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 3200); }
 
-  loadState(blank()); refreshCount();
+  // ---------- Login (somente no modo nuvem) ----------
+  function authMsg(m) { $('#authMsg').innerHTML = m || ''; $('#authMsg').hidden = !m; }
+  function showLogin(msg) {
+    user = null; $('#userBar').hidden = true;
+    $('#loginForm').hidden = false; $('#pwdForm').hidden = true;
+    $('#authTitle').textContent = 'Entrar';
+    $('#authSub').textContent = 'Acesse suas fichas técnicas no computador e no celular.';
+    authMsg(msg); show('login');
+  }
+  function showPwdForm(invite) {
+    $('#loginForm').hidden = true; $('#pwdForm').hidden = false;
+    $('#authTitle').textContent = invite ? 'Crie sua senha' : 'Nova senha';
+    $('#authSub').textContent = invite ? 'Bem-vinda! Escolha uma senha para acessar suas fichas.' : 'Digite a nova senha da sua conta.';
+    authMsg(''); show('login'); $('#newPwd').focus();
+  }
+  function authError(err) {
+    const m = (err && err.message) || '';
+    if (/invalid login credentials/i.test(m)) return 'E-mail ou senha incorretos.';
+    if (/email not confirmed/i.test(m)) return 'Seu e-mail ainda não foi confirmado. Abra o link enviado para o seu e-mail.';
+    if (/rate limit|too many/i.test(m)) return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.';
+    if (/password/i.test(m) && /(6|characters|short|weak)/i.test(m)) return 'A senha precisa ter pelo menos 6 caracteres.';
+    if (/fetch|network/i.test(m)) return 'Sem conexão com a internet. Verifique e tente de novo.';
+    return 'Não foi possível continuar: ' + esc(m);
+  }
+  async function busy(btn, label, fn) { const t = btn.textContent; btn.disabled = true; btn.textContent = label; try { await fn(); } finally { btn.disabled = false; btn.textContent = t; } }
+
+  async function enterApp(u) {
+    user = u; $('#userEmail').textContent = '✉ ' + u.email; $('#userBar').hidden = false;
+    $('#savedSub').textContent = 'Fichas salvas na sua conta: aparecem no computador e no celular.';
+    show('calc');
+    await fetchDb(); await migrateLocal(); refreshCount();
+    if (!$('#view-saved').hidden) renderList();
+  }
+  // Primeiro login neste aparelho: envia para a nuvem as fichas que estavam só no navegador (v1).
+  async function migrateLocal() {
+    const flag = 'cmv_migrado_nuvem', local = readLocal(); // uma única vez por aparelho
+    let done; try { done = localStorage.getItem(flag); } catch { done = 1; }
+    if (!local.length || done) return;
+    const n = await addRecs(local);
+    if (n < 0) { toast('Não foi possível enviar as fichas deste aparelho para a nuvem. Tentaremos no próximo acesso.'); return; }
+    try { localStorage.setItem(flag, new Date().toISOString()); } catch {}
+    if (n > 0) toast(`${n} ficha(s) deste aparelho foram enviadas para a sua conta ✓`);
+  }
+
+  $('#loginForm').onsubmit = e => {
+    e.preventDefault();
+    busy($('#loginBtn'), 'Entrando…', async () => {
+      const { data, error } = await sb.auth.signInWithPassword({ email: $('#loginEmail').value.trim(), password: $('#loginPwd').value });
+      if (error) { authMsg(authError(error)); return; }
+      $('#loginPwd').value = ''; authMsg(''); await enterApp(data.user);
+    });
+  };
+  $('#forgotBtn').onclick = () => {
+    const email = $('#loginEmail').value.trim();
+    if (!email) { authMsg('Digite seu e-mail no campo acima e clique de novo em <b>Esqueci minha senha</b>.'); $('#loginEmail').focus(); return; }
+    busy($('#forgotBtn'), 'Enviando…', async () => {
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+      authMsg(error ? authError(error) : `Se <b>${esc(email)}</b> tiver uma conta, enviamos um link para criar uma nova senha. Confira também a caixa de spam.`);
+    });
+  };
+  $('#pwdForm').onsubmit = e => {
+    e.preventDefault();
+    if ($('#newPwd').value !== $('#newPwd2').value) { authMsg('As duas senhas não são iguais.'); return; }
+    busy($('#pwdBtn'), 'Salvando…', async () => {
+      const { data, error } = await sb.auth.updateUser({ password: $('#newPwd').value });
+      if (error) { authMsg(authError(error)); return; }
+      $('#newPwd').value = $('#newPwd2').value = ''; toast('Senha salva ✓'); await enterApp(data.user);
+    });
+  };
+  $('#logoutBtn').onclick = async () => {
+    if (hasData() && !confirm('Sair da conta? Alterações não salvas nesta ficha serão perdidas.')) return;
+    user = null; await sb.auth.signOut();
+    db = []; refreshCount(); loadState(blank()); showLogin();
+  };
+
+  async function boot() {
+    loadState(blank());
+    if (!CLOUD) { db = readLocal(); refreshCount(); return; }
+    $('#footer').textContent = 'Calculadora de CMV v2.0 · fichas salvas na nuvem · feita com carinho para Mais Doce por Amor';
+    $('#view-calc').hidden = true; $('#tabs').hidden = true;
+    if (!sb) { showLogin('Não foi possível conectar ao servidor. Verifique sua internet e recarregue a página.'); return; }
+    sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && user) setTimeout(() => { db = []; refreshCount(); showLogin('Sua sessão terminou. Entre novamente.'); }); });
+    const { data: { session } } = await sb.auth.getSession();
+    const type = authHash.get('type');
+    if (authHash.get('error')) {
+      history.replaceState(null, '', location.pathname);
+      if (session) { enterApp(session.user); toast('Este link expirou ou já foi usado.'); }
+      else showLogin('Este link expirou ou já foi usado. Clique em <b>Esqueci minha senha</b> para receber um novo.');
+    } else if (session && (type === 'recovery' || type === 'invite')) {
+      user = session.user; showPwdForm(type === 'invite');
+    } else if (session) enterApp(session.user);
+    else showLogin();
+  }
+  boot();
 })();
 </script>
 </body>
