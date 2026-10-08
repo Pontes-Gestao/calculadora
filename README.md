@@ -29,7 +29,7 @@ const SUPABASE_KEY = '';
 1. Crie um projeto em <https://supabase.com> (região São Paulo).
 2. **SQL Editor → New query**: cole o conteúdo de [`supabase/setup.sql`](supabase/setup.sql) e clique em **Run**.
 3. **Authentication → URL Configuration**:
-   - *Site URL*: `https://performancevendas01-hash.github.io/calculadora-cmv/`
+   - *Site URL*: `https://pontes-gestao.github.io/calculadora/`
    - *Redirect URLs*: adicione o mesmo endereço.
 4. **Authentication → Sign In / Providers → Email**: desligue *Allow new users to sign up*
    (só você cria as contas das clientes).
