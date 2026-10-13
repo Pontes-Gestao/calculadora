@@ -91,11 +91,16 @@ input[inputmode=decimal],input[inputmode=numeric]{font-family:var(--mono)}
 /* ---------- Tables ---------- */
 .rows{display:flex;flex-direction:column;gap:10px}
 .row-head,.row{display:grid;gap:10px;align-items:center}
-.ing .row-head,.ing .row{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) 92px minmax(0,1.2fr) minmax(0,1.1fr) 38px}
+.ing .row-head,.ing .row{grid-template-columns:minmax(0,2fr) minmax(0,.9fr) 84px minmax(0,1.7fr) minmax(0,1fr) 38px}
 .emb .row-head,.emb .row{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.1fr) 38px}
 .row-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:0 2px;font-family:var(--mono)}
 .row-wrap{background:rgba(44,197,208,.03);border:1px solid var(--line);border-radius:12px;padding:10px;transition:.15s}
 .row-wrap:focus-within{border-color:var(--line-hi);background:rgba(44,197,208,.06)}
+.valbox{display:flex;gap:6px;align-items:center}
+.valbox>.input{flex:1;min-width:0}
+.pacbox{flex:1;min-width:0;position:relative}
+.pacbox .input{padding-right:24px}
+.pacbox span{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--cyan);font-weight:700;font-family:var(--mono);font-size:13px}
 .cost{font-weight:700;text-align:right;padding-right:6px;white-space:nowrap;font-family:var(--mono);color:var(--cyan-hi)}
 .del{border:0;background:transparent;width:38px;height:38px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:18px}
 .del:hover{background:rgba(255,122,136,.12);color:var(--danger)}
@@ -106,6 +111,7 @@ input[inputmode=decimal],input[inputmode=numeric]{font-family:var(--mono)}
   .row-head{display:none}
   .ing .row,.emb .row{grid-template-columns:1fr 1fr}
   .row .c-name{grid-column:1/-1}
+  .row>div:has(.pacbox:not([hidden])){grid-column:1/-1}
   .mlabel{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;font-family:var(--mono)}
   .cost{text-align:left}
 }
@@ -273,7 +279,7 @@ footer{text-align:center;color:var(--muted);text-shadow:0 0 6px var(--bg),0 0 12
       <input id="produto" class="input big" placeholder="Ex.: Bolo de pote de ninho com morango" autocomplete="off">
       <div style="height:20px"></div>
       <div class="ing">
-        <div class="row-head"><div>Ingrediente</div><div>Quantidade</div><div>Unidade</div><div>Valor do kg / lt / und</div><div style="text-align:right">Custo</div><div></div></div>
+        <div class="row-head"><div>Ingrediente</div><div>Quantidade</div><div>Unidade</div><div>Valor (kg / lt / und / pacote)</div><div style="text-align:right">Custo</div><div></div></div>
         <div class="rows" id="ingRows"></div>
       </div>
       <button class="add" id="addIng">+ Adicionar ingrediente</button>
@@ -518,8 +524,15 @@ footer{text-align:center;color:var(--muted);text-shadow:0 0 6px var(--bg),0 0 12
   // ---------- Travas (avisos de valores exorbitantes) ----------
   function ingWarn(r) {
     const q = parseNum(r.qtd), v = parseNum(r.valor), msgs = [];
-    const unLbl = { kg: 'kg', lt: 'litros', und: 'unidades' }[r.un];
-    if (r.un === 'kg' && q > 10) msgs.push(`Você informou <b>${numStr(q)} kg</b>. Confira a unidade de medida: se forem ${numStr(q)} gramas, digite <b>${numStr(+(q / 1000).toFixed(4))}</b> (ex.: 300 g = 0,3 kg).`);
+    if (r.un === 'kg' && q > 10) msgs.push(`Você informou <b>${numStr(q)} kg</b>. Confira a unidade de medida: se forem ${numStr(q)} gramas, escolha a unidade <b>g</b> ou digite <b>${numStr(+(q / 1000).toFixed(4))}</b> (ex.: 300 g = 0,3 kg).`);
+    if (r.un === 'g') {
+      const p = parseNum(r.pac);
+      if (q > 0 && q < 1) msgs.push(`Você informou <b>${numStr(q)} g</b>. Confira a unidade de medida: na unidade g, digite os gramas (ex.: 300 g = <b>300</b>). Se for ${numStr(q)} kg, escolha a unidade <b>kg</b>.`);
+      if (q > 5000) msgs.push(`Você informou <b>${numStr(q)} g</b> (${numStr(+(q / 1000).toFixed(3))} kg). Confira a quantidade e a unidade de medida.`);
+      if (q > 0 && v > 0 && !(p > 0)) msgs.push('Informe <b>quantos gramas tem o pacote</b> que você comprou (ex.: pacote de 250 g → digite 250).');
+      if (p > 0 && p < 1) msgs.push(`Pacote de <b>${numStr(p)} g</b>? O peso do pacote deve ser em gramas (ex.: 0,25 kg = <b>250</b> g).`);
+      if (v > 1000) msgs.push(`Preço de <b>${brl(v)}</b> pelo pacote parece alto. Reconfira o valor.`);
+    }
     if (r.un === 'lt' && q > 10) msgs.push(`Você informou <b>${numStr(q)} litros</b>. Confira a unidade de medida: se forem ${numStr(q)} ml, digite <b>${numStr(+(q / 1000).toFixed(4))}</b> (ex.: 200 ml = 0,2 lt).`);
     if (r.un === 'und' && q > 200) msgs.push(`Você informou <b>${numStr(q)} unidades</b>. Esse número está correto? Reconfira a unidade de medida.`);
     if ((r.un === 'kg' || r.un === 'lt') && v > 500) msgs.push(`Valor de <b>${brl(v)}</b> por ${r.un === 'kg' ? 'kg' : 'litro'} parece alto. Confira se digitou o preço do kg/litro (e não de várias embalagens).`);
@@ -537,7 +550,13 @@ footer{text-align:center;color:var(--muted);text-shadow:0 0 6px var(--bg),0 0 12
 
   // ---------- Cálculos ----------
   function calc(s = state) {
-    const cost = r => Math.max(0, n0(r.qtd)) * Math.max(0, n0(r.valor));
+    // Em gramas, o valor é o preço do pacote e "pac" são os gramas do pacote (ex.: R$ 40 / 250 g).
+    const cost = r => {
+      const base = Math.max(0, n0(r.qtd)) * Math.max(0, n0(r.valor));
+      if (r.un !== 'g') return base;
+      const pac = n0(r.pac);
+      return pac > 0 ? base / pac : 0;
+    };
     const receita = s.ing.reduce((a, r) => a + cost(r), 0);
     // Fichas antigas (sem "div") são calculadas inteiras.
     const porcoes = s.div?.on === true && n0(s.div.n) >= 1 ? n0(s.div.n) : 1;
@@ -563,16 +582,28 @@ footer{text-align:center;color:var(--muted);text-shadow:0 0 6px var(--bg),0 0 12
           <div><span class="mlabel">Unidade</span><select class="input" data-f="un">
             <option value="kg"${r.un === 'kg' ? ' selected' : ''}>kg</option>
             <option value="lt"${r.un === 'lt' ? ' selected' : ''}>lt</option>
+            <option value="g"${r.un === 'g' ? ' selected' : ''}>g</option>
             <option value="und"${r.un === 'und' ? ' selected' : ''}>und</option></select></div>
-          <div><span class="mlabel" data-vlabel>Valor do ${r.un}</span><input class="input" data-f="valor" inputmode="decimal" placeholder="R$ por ${r.un}" value="${esc(r.valor)}"></div>
+          <div><span class="mlabel" data-vlabel></span><div class="valbox">
+            <input class="input" data-f="valor" inputmode="decimal" value="${esc(r.valor)}">
+            <div class="pacbox"><input class="input" data-f="pac" inputmode="decimal" placeholder="gramas" title="Quantos gramas tem o pacote" value="${esc(r.pac ?? '')}"><span>g</span></div>
+          </div></div>
           <div><span class="mlabel">Custo</span><div class="cost" data-cost>R$ 0,00</div></div>
           <button class="del" title="Remover">✕</button>
         </div>
         <div class="warn" data-warn></div>`;
+      const setUn = () => {
+        const g = r.un === 'g';
+        el.querySelector('.pacbox').hidden = !g;
+        el.querySelector('[data-f=valor]').placeholder = g ? 'R$ do pacote' : 'R$ por ' + r.un;
+        el.querySelector('[data-f=valor]').title = g ? 'Preço do pacote inteiro' : 'Preço de 1 ' + r.un;
+        el.querySelector('[data-vlabel]').textContent = g ? 'Preço do pacote · gramas do pacote' : 'Valor do ' + r.un;
+      };
+      setUn();
       el.addEventListener('input', e => {
         const f = e.target.dataset.f; if (!f) return;
         r[f] = e.target.value;
-        if (f === 'un') { el.querySelector('[data-f=valor]').placeholder = 'R$ por ' + r.un; el.querySelector('[data-vlabel]').textContent = 'Valor do ' + r.un; }
+        if (f === 'un') setUn();
         update();
       });
       el.querySelector('.del').onclick = () => {
@@ -615,6 +646,8 @@ footer{text-align:center;color:var(--muted);text-shadow:0 0 6px var(--bg),0 0 12
       const q = parseNum(r.qtd), v = parseNum(r.valor);
       r._el.querySelector('[data-f=qtd]').classList.toggle('flag', msgs.some(m => /quantidade|unidade de medida|embalagens<\/b>/i.test(m)) && q > 0);
       r._el.querySelector('[data-f=valor]').classList.toggle('flag', msgs.some(m => /parece alto/.test(m)) && v > 0);
+      const pac = r._el.querySelector('[data-f=pac]');
+      if (pac) pac.classList.toggle('flag', msgs.some(m => /gramas tem o pacote|Pacote de/.test(m)));
     });
   }
 
@@ -792,8 +825,9 @@ footer{text-align:center;color:var(--muted);text-shadow:0 0 6px var(--bg),0 0 12
       footStyles: { fillColor: SOFT, textColor: INK, fontStyle: 'bold' }, margin: { left: 14, right: 14 } };
     const ing = s.ing.filter(r => r.nome || n0(r.qtd) || n0(r.valor));
     doc.autoTable({ ...tbl, startY: y,
-      head: [['Ingrediente', 'Quantidade', 'Unid.', 'Valor kg/lt/und', 'Custo']],
-      body: ing.map(r => [r.nome || '-', numStr(n0(r.qtd)), r.un, brl(n0(r.valor)), brl(c.cost(r))]),
+      head: [['Ingrediente', 'Quantidade', 'Unid.', 'Valor', 'Custo']],
+      body: ing.map(r => [r.nome || '-', numStr(n0(r.qtd)), r.un,
+        r.un === 'g' ? `${brl(n0(r.valor))} / pacote ${numStr(n0(r.pac))} g` : `${brl(n0(r.valor))} / ${r.un}`, brl(c.cost(r))]),
       foot: [[{ content: 'Custo total da receita', colSpan: 4 }, brl(c.receita)]],
       columnStyles: { 1: { halign: 'right' }, 2: { halign: 'center' }, 3: { halign: 'right' }, 4: { halign: 'right' } } });
     y = doc.lastAutoTable.finalY + 8;
