@@ -948,19 +948,22 @@ footer{text-align:center;color:var(--muted);text-shadow:0 0 6px var(--bg),0 0 12
     if (!$('#view-saved').hidden) renderList();
   }
   // Primeiro login neste aparelho: envia para a nuvem as fichas que estavam só no navegador (v1).
-  // Só com confirmação da pessoa, e a cópia local é apagada em seguida — assim, num computador
-  // compartilhado, fichas deste navegador nunca vão parar sozinhas na conta de outra empresa.
+  // Fichas de antes do login (só neste navegador). Nunca vão sozinhas para a nuvem — num computador
+  // compartilhado poderiam parar na conta de outra empresa — e nunca são apagadas sem estarem salvas na conta.
   async function migrateLocal() {
     const local = readLocal().filter(validRec);
     if (!local.length) return;
     const forget = () => { try { localStorage.removeItem(KEY); } catch {} };
-    if (!confirm(`Encontramos ${local.length} ficha(s) salva(s) somente neste navegador, de antes do login.\n\n` +
-      `Elas são suas? Clique em OK para enviá-las para a conta ${user.email}.\n` +
-      `Clique em Cancelar se não forem suas — elas serão apagadas deste navegador.`)) { forget(); return; }
-    const n = await addRecs(local);
+    const ids = new Set(db.map(x => x.id)), pend = local.filter(x => !ids.has(x.id));
+    if (!pend.length) { forget(); return; } // todas já estão na conta: a cópia local não é mais necessária
+    const nomes = pend.slice(0, 6).map(x => '• ' + (x.produto || 'Sem nome')).join('\n') + (pend.length > 6 ? `\n• … e mais ${pend.length - 6}` : '');
+    if (!confirm(`Encontramos ${pend.length} ficha(s) salva(s) somente neste navegador, de antes do login:\n\n${nomes}\n\n` +
+      `Essas fichas são suas? Clique em OK para guardá-las na conta ${user.email}.\n` +
+      `Se não forem suas, clique em Cancelar: nada será enviado nem apagado.`)) return;
+    const n = await addRecs(pend);
     if (n < 0) { toast('Não foi possível enviar as fichas deste aparelho para a nuvem. Tentaremos no próximo acesso.'); return; }
     forget();
-    if (n > 0) toast(`${n} ficha(s) deste aparelho foram enviadas para a sua conta ✓`);
+    if (n > 0) toast(`${n} ficha(s) deste aparelho foram guardadas na sua conta ✓`);
   }
 
   $('#loginForm').onsubmit = e => {
