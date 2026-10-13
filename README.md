@@ -1,4 +1,4 @@
-# Calculadora de CMV · v2.0
+# Calculadora de CMV · v3.0 · Pontes
 
 Calculadora de CMV (Custo de Mercadoria Vendida) e ficha técnica para confeitarias e restaurantes.
 
