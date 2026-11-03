@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculadora de CMV Pontes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Descubra o preço certo de cada produto no balcão e no iFood, com ficha técnica, taxas, alavancas e embalagens na conta. Criada pela Pontes – Consultoria e Gestão de iFood.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Mesmo visual da calculadora: fundo escuro com código caindo, ciano Pontes, painéis com brilho. Página de coluna única com simulador no topo. */
+:root{
+  --bg:#070C12; --panel:rgba(13,22,31,.86); --cyan:#2CC5D0; --cyan-hi:#7DF3F8; --cyan-faint:rgba(44,197,208,.08);
+  --line:rgba(44,197,208,.2); --line-hi:rgba(44,197,208,.6); --text:#E2F3F5; --muted:#8FA9B2; --ink:#04161A; --warn:#FFD27A;
+  --glow:0 0 0 1px var(--line),0 18px 40px -18px rgba(0,0,0,.8),0 0 30px -12px rgba(44,197,208,.35);
+  --display:'Orbitron','Exo 2',system-ui,sans-serif; --body:'Exo 2',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--body);font-size:17px;line-height:1.6;color:var(--text);background:var(--bg);overflow-x:hidden;
+  background-image:radial-gradient(1200px 600px at 50% -10%,rgba(44,197,208,.16),transparent 60%)}
+::selection{background:var(--cyan);color:var(--ink)}
+a{color:var(--cyan)}
+img{max-width:100%}
+:focus-visible{outline:2px solid var(--cyan-hi);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+
+#matrix{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.4}
+.scan{position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px)}
+.page{position:relative;z-index:1}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Topo */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}
+.mini-logo{width:46px;height:46px;border-radius:10px;overflow:hidden;position:relative;background:#1C2330;box-shadow:0 0 0 1px var(--line-hi),0 0 18px -4px rgba(44,197,208,.6)}
+.mini-logo img{position:absolute;width:72px;height:72px;left:-13px;top:-11px;max-width:none}
+.brand b{font-family:var(--display);letter-spacing:.16em;color:var(--cyan);font-size:18px}
+.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;line-height:1.2}
+.login{font-family:var(--mono);font-size:13px;text-decoration:none;border:1px solid var(--line);padding:8px 14px;border-radius:10px;color:var(--text);background:var(--panel)}
+.login:hover{border-color:var(--line-hi)}
+
+/* Títulos e texto */
+h1,h2,h3{text-wrap:balance;margin:0}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,5.2vw,52px);line-height:1.12;letter-spacing:.02em}
+h1 em{font-style:normal;color:var(--cyan);text-shadow:0 0 22px rgba(44,197,208,.55)}
+h2{font-family:var(--display);font-weight:700;font-size:clamp(22px,3.4vw,32px);letter-spacing:.04em;line-height:1.2}
+h3{font-weight:700;font-size:19px;line-height:1.3}
+p{margin:0}
+.lead{font-size:clamp(17px,2vw,20px);color:var(--muted);max-width:56ch}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);display:inline-flex;align-items:center;gap:8px}
+.eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* Botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:15px 24px;font-weight:800;font-size:16px;
+  letter-spacing:.04em;text-decoration:none;cursor:pointer;border:1px solid var(--cyan);transition:.2s;font-family:var(--body);text-align:center}
+.btn.primary{background:var(--cyan);color:var(--ink);box-shadow:0 0 28px -4px rgba(44,197,208,.75)}
+.btn.primary:hover{background:var(--cyan-hi);box-shadow:0 0 36px -2px rgba(44,197,208,.9)}
+.btn.ghost{background:transparent;color:var(--cyan)}
+.btn.ghost:hover{background:var(--cyan-faint)}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+
+/* Seções */
+section{padding-block:56px}
+.sec-head{display:grid;gap:12px;margin-bottom:30px;max-width:720px}
+.panel{background:var(--panel);border-radius:14px;box-shadow:var(--glow);padding:24px;position:relative;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.panel::before{content:"";position:absolute;left:24px;right:24px;top:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.8}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center;padding-block:36px 56px}
+.hero-copy{display:grid;gap:22px}
+.proof{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.proof span::before{content:"✓ ";color:var(--cyan);font-weight:800}
+@media (max-width:900px){.hero{grid-template-columns:1fr}}
+
+/* Simulador */
+.sim h3{font-family:var(--display);font-size:16px;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.sim .tag{font-family:var(--mono);font-size:11px;background:var(--cyan);color:var(--ink);padding:2px 8px;border-radius:6px;letter-spacing:.04em}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.field{display:grid;gap:5px;min-width:0}
+.field.full{grid-column:1/-1}
+label{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan)}
+.input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:rgba(4,12,18,.75);color:var(--text);font:inherit;font-family:var(--mono);outline:none}
+.input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(44,197,208,.18)}
+.check{display:flex;gap:10px;align-items:center;font-family:var(--body);font-size:15px;letter-spacing:0;text-transform:none;color:var(--text);font-weight:500;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--cyan)}
+.results{display:grid;gap:8px;margin-top:18px}
+.res{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(44,197,208,.03)}
+.res span{color:var(--muted);font-size:14px}
+.res strong{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:18px;color:var(--cyan-hi);white-space:nowrap}
+.res.main{background:linear-gradient(120deg,rgba(44,197,208,.2),rgba(44,197,208,.04));border-color:var(--line-hi)}
+.res.main strong{font-size:26px;text-shadow:0 0 16px rgba(44,197,208,.6)}
+.sim-note{margin-top:12px;font-size:13px;color:var(--muted)}
+.sim-alert{margin-top:12px;font-size:14px;color:var(--warn);background:rgba(255,200,87,.08);border:1px solid rgba(255,210,122,.3);border-radius:10px;padding:10px 12px}
+
+/* Dores */
+.pains{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.pain{display:grid;gap:10px;align-content:start}
+.pain .big{font-family:var(--mono);font-size:34px;color:var(--cyan-hi);font-weight:700;line-height:1}
+.pain p{color:var(--muted)}
+@media (max-width:820px){.pains{grid-template-columns:1fr}}
+
+/* Etapas */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:start}
+.steps .n{width:44px;height:44px;border-radius:10px;border:1px solid var(--line-hi);background:var(--cyan-faint);color:var(--cyan);display:grid;place-items:center;
+  font-family:var(--display);font-weight:700;box-shadow:inset 0 0 12px rgba(44,197,208,.25)}
+.steps p{color:var(--muted);font-size:15px;margin-top:4px}
+.formula{font-family:var(--mono);font-size:13px;color:var(--cyan-hi);margin-top:6px;display:block}
+@media (max-width:900px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.steps{grid-template-columns:1fr}}
+
+/* Entregas e público */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+.list{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:10px}
+.list li{padding-left:28px;position:relative}
+.list li::before{content:"";position:absolute;left:4px;top:.55em;width:10px;height:10px;border-radius:3px;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.list.no li::before{background:transparent;border:1px solid var(--muted);box-shadow:none}
+
+/* Sobre */
+.about{display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px;align-items:center}
+.logo-big{width:180px;height:180px;border-radius:22px;overflow:hidden;position:relative;background:#1C2330;box-shadow:0 0 0 1px var(--line-hi),0 0 40px -6px rgba(44,197,208,.55)}
+.logo-big img{position:absolute;width:284px;height:284px;left:-52px;top:-45px;max-width:none}
+.about p{color:var(--muted);margin-top:10px}
+@media (max-width:700px){.about{grid-template-columns:1fr}}
+
+/* Preços */
+.plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;max-width:860px}
+.plan{display:grid;gap:16px;align-content:start}
+.plan.best{box-shadow:0 0 0 1px var(--line-hi),0 18px 40px -18px rgba(0,0,0,.8),0 0 44px -8px rgba(44,197,208,.55)}
+.plan .ribbon{position:absolute;top:-12px;right:20px;background:var(--cyan);color:var(--ink);font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:.06em}
+.plan h3{font-family:var(--display);letter-spacing:.06em;text-transform:uppercase;font-size:17px}
+.price{font-family:var(--mono);font-size:44px;font-weight:700;color:var(--cyan-hi);line-height:1;text-shadow:0 0 18px rgba(44,197,208,.5)}
+.price small{font-size:16px;color:var(--muted);font-weight:500;text-shadow:none}
+.plan .sub{color:var(--muted);font-size:14px}
+.plan .list{margin:0}
+.guarantee{display:flex;gap:14px;align-items:center;margin-top:24px;max-width:860px;color:var(--muted)}
+.guarantee .seal{flex:none;width:58px;height:58px;border-radius:50%;border:2px solid var(--cyan);display:grid;place-items:center;font-family:var(--display);color:var(--cyan);font-weight:800;font-size:20px;box-shadow:0 0 18px -4px var(--cyan)}
+@media (max-width:760px){.plans{grid-template-columns:1fr}}
+
+/* FAQ */
+.faq{display:grid;gap:12px;max-width:820px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+details[open]{border-color:var(--line-hi)}
+summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--mono);color:var(--cyan);font-size:20px;line-height:1}
+details[open] summary::after{content:"−"}
+details p{color:var(--muted);margin-top:10px}
+
+/* Final */
+.final{text-align:center;display:grid;gap:18px;justify-items:center;padding-block:40px}
+.final .lead{margin:0 auto}
+footer{border-top:1px solid var(--line);padding-block:28px 40px;color:var(--muted);font-size:14px}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.foot a{color:var(--muted)}
+
+/* Botão fixo de WhatsApp */
+.wa{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:5;width:56px;height:56px;border-radius:50%;
+  background:var(--cyan);color:var(--ink);display:grid;place-items:center;box-shadow:0 0 26px -2px rgba(44,197,208,.8);text-decoration:none}
+.wa svg{width:28px;height:28px}
+</style>
+</head>
+<body>
+<canvas id="matrix" aria-hidden="true"></canvas>
+<div class="scan" aria-hidden="true"></div>
+
+<div class="page">
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="#">
+      <span class="mini-logo"><img src="assets/pontes-logo.webp" alt=""></span>
+      <span><b>PONTES</b><small>Consultoria e Gestão de iFood</small></span>
+    </a>
+    <a class="login" id="loginLink" href="https://pontes-gestao.github.io/calculadora/">Já sou cliente · Entrar</a>
+  </div>
+
+  <!-- HERO + simulador -->
+  <div class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Calculadora de CMV · Ficha técnica</span>
+      <h1>Você sabe quanto sobra de cada venda no <em>iFood</em>?</h1>
+      <p class="lead">Monte a ficha técnica do seu produto e descubra na hora o preço certo para o balcão e para o iFood, com taxas, promoções e embalagens já na conta.</p>
+      <div class="btns">
+        <a class="btn primary" href="#precos">Quero a calculadora</a>
+        <a class="btn ghost" href="#como-funciona">Ver como funciona</a>
+      </div>
+      <div class="proof"><span>Funciona no celular e no computador</span><span>Fichas salvas na sua conta</span><span>PDF da ficha técnica</span></div>
+    </div>
+
+    <form class="panel sim" id="sim" autocomplete="off" onsubmit="return false">
+      <h3>Teste agora <span class="tag">GRÁTIS</span></h3>
+      <div class="fields">
+        <div class="field full">
+          <label for="sCusto">Custo dos ingredientes da receita (R$)</label>
+          <input class="input" id="sCusto" inputmode="decimal" value="48,00">
+        </div>
+        <div class="field">
+          <label for="sPorc">Rende quantas porções?</label>
+          <input class="input" id="sPorc" inputmode="numeric" value="8">
+        </div>
+        <div class="field">
+          <label for="sEmb">Embalagem por porção (R$)</label>
+          <input class="input" id="sEmb" inputmode="decimal" value="1,50">
+        </div>
+        <div class="field full">
+          <label class="check" for="sAlav"><input type="checkbox" id="sAlav"> Uso alavancas do iFood (entrega grátis, campanhas)</label>
+        </div>
+      </div>
+      <div class="results" aria-live="polite">
+        <div class="res"><span>Custo por porção (CMV)</span><strong id="rCmv">–</strong></div>
+        <div class="res"><span>Preço no balcão</span><strong id="rBalcao">–</strong></div>
+        <div class="res main"><span>Preço no iFood</span><strong id="rIfood">–</strong></div>
+      </div>
+      <p class="sim-alert" id="rAlert" hidden></p>
+      <p class="sim-note">Exemplo: bolo de R$ 48 em ingredientes, 8 fatias. Troque pelos números do seu produto. Na calculadora completa você lança cada ingrediente, em kg, litro, unidade ou grama.</p>
+    </form>
+  </div>
+</div>
+
+<!-- Dores -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">O problema</span>
+      <h2>Vende bastante e mesmo assim o dinheiro não aparece?</h2>
+      <p class="lead">Na maioria das vezes o problema está no preço. Estes são os três erros que mais vemos nos restaurantes e confeitarias que atendemos.</p>
+    </div>
+    <div class="pains">
+      <div class="panel pain"><span class="big">17,48%</span><h3>A taxa do iFood fica fora da conta</h3><p>Comissão de 12%, pagamento online de 3,49% e antecipação de 1,99%. Quem cobra no iFood o mesmo preço do balcão paga isso do próprio bolso.</p></div>
+      <div class="panel pain"><span class="big">R$ 0,50</span><h3>A embalagem é esquecida</h3><p>Pote, tampa, colher, sacola e etiqueta. Centavos que, somados em cada pedido do mês, viram centenas de reais.</p></div>
+      <div class="panel pain"><span class="big">÷ 0,3</span><h3>O preço é copiado da concorrência</h3><p>Sem saber o custo de cada receita, não dá para saber se o preço dá lucro. A calculadora parte do seu custo real e mantém o CMV em 30%.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Como funciona -->
+<section id="como-funciona">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Como funciona</span>
+      <h2>Seis etapas, do ingrediente ao preço final</h2>
+      <p class="lead">É o mesmo método que a Pontes usa nas consultorias, em uma ferramenta simples de usar.</p>
+    </div>
+    <ol class="steps">
+      <li><span class="n">1</span><div><h3>Ingredientes</h3><p>Lance cada ingrediente com quantidade e preço, em kg, litro, unidade ou gramas do pacote.</p><span class="formula">quantidade × valor</span></div></li>
+      <li><span class="n">2</span><div><h3>Rendimento</h3><p>Receita de bolo que rende 8 fatias? A calculadora divide o custo por porção.</p><span class="formula">custo ÷ porções</span></div></li>
+      <li><span class="n">3</span><div><h3>Preço de balcão</h3><p>Preço de venda na loja com o custo dos ingredientes em 30% do preço.</p><span class="formula">CMV ÷ 0,3</span></div></li>
+      <li><span class="n">4</span><div><h3>Preço no iFood</h3><p>As taxas do plano básico já vêm preenchidas e podem ser ajustadas ao seu contrato.</p><span class="formula">balcão ÷ 0,82</span></div></li>
+      <li><span class="n">5</span><div><h3>Alavancas</h3><p>Usa entrega grátis, campanha inteligente ou hits? O preço já considera esse custo.</p><span class="formula">iFood ÷ 0,88</span></div></li>
+      <li><span class="n">6</span><div><h3>Embalagens</h3><p>Somadas no final, a preço de custo, no balcão e no iFood.</p><span class="formula">preço + embalagens</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- Entregas e público -->
+<section>
+  <div class="wrap two">
+    <div class="panel">
+      <span class="eyebrow">O que você recebe</span>
+      <ul class="list">
+        <li>Acesso com login e senha só seu</li>
+        <li>Fichas técnicas salvas na nuvem, iguais no celular e no computador</li>
+        <li>Ficha técnica em PDF com a marca Pontes, pronta para imprimir ou mandar para a equipe</li>
+        <li>Avisos quando um número parece errado, como 300 kg em vez de 300 g</li>
+        <li>Busca por nome e backup das suas fichas</li>
+        <li>Suas fichas são só suas: nenhuma outra cliente tem acesso a elas</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <span class="eyebrow">Para quem é</span>
+      <ul class="list">
+        <li>Confeitarias e doceiras que vendem por encomenda ou no iFood</li>
+        <li>Restaurantes, marmitarias, hamburguerias, pizzarias e açaiterias</li>
+        <li>Quem está abrindo a loja no iFood e quer começar com o preço certo</li>
+        <li>Quem já vende e sente que o lucro não aparece no fim do mês</li>
+      </ul>
+      <ul class="list no">
+        <li>Não é um sistema de caixa ou de estoque. É a ferramenta para acertar o preço de cada produto.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Sobre -->
+<section>
+  <div class="wrap">
+    <div class="panel about">
+      <div class="logo-big"><img src="assets/pontes-logo.webp" alt="Logo da Pontes Consultoria e Gestão de iFood"></div>
+      <div>
+        <span class="eyebrow">Quem criou</span>
+        <h2 style="margin-top:10px">Pontes – Consultoria e Gestão de iFood</h2>
+        <p>A Pontes ajuda restaurantes e confeitarias a vender mais e lucrar no iFood. A calculadora nasceu dentro das nossas consultorias: é o método que usamos para precificar o cardápio das clientes, agora disponível para você usar sozinha, quando quiser.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Preços -->
+<section id="precos">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Planos</span>
+      <h2>Menos que o lucro de um fim de semana bem precificado</h2>
+    </div>
+    <div class="plans">
+      <div class="panel plan">
+        <h3>Calculadora</h3>
+        <div class="price">R$ 97 <small>/ 1 ano de acesso</small></div>
+        <p class="sub">Pagamento único no Pix ou cartão.</p>
+        <ul class="list">
+          <li>Calculadora completa, sem limite de fichas</li>
+          <li>Fichas salvas na nuvem</li>
+          <li>PDF da ficha técnica</li>
+          <li>Suporte pelo WhatsApp para dúvidas de uso</li>
+        </ul>
+        <a class="btn primary buy" data-plan="calculadora" href="#precos">Quero a calculadora</a>
+      </div>
+      <div class="panel plan best">
+        <span class="ribbon">MAIS COMPLETO</span>
+        <h3>Calculadora + Revisão</h3>
+        <div class="price">R$ 197 <small>/ 1 ano de acesso</small></div>
+        <p class="sub">Para quem quer a ajuda da Pontes no primeiro passo.</p>
+        <ul class="list">
+          <li>Tudo do plano Calculadora</li>
+          <li>Uma revisão de preços do seu cardápio com a Pontes, por chamada de vídeo</li>
+          <li>Ajuda para montar as primeiras fichas técnicas</li>
+        </ul>
+        <a class="btn primary buy" data-plan="revisao" href="#precos">Quero com revisão</a>
+      </div>
+    </div>
+    <div class="guarantee">
+      <span class="seal">7</span>
+      <p><b style="color:var(--text)">Garantia de 7 dias.</b> Se a calculadora não for para você, peça o reembolso em até 7 dias e devolvemos 100% do valor.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Dúvidas</span>
+      <h2>Perguntas frequentes</h2>
+    </div>
+    <div class="faq">
+      <details><summary>Preciso instalar alguma coisa?</summary><p>Não. A calculadora abre no navegador do celular ou do computador. Você entra com seu e-mail e senha e suas fichas aparecem nos dois.</p></details>
+      <details><summary>Como recebo o acesso depois de pagar?</summary><p>Em até 1 dia útil você recebe um e-mail para criar sua senha, e já pode começar a usar.</p></details>
+      <details><summary>Outras pessoas conseguem ver as minhas fichas?</summary><p>Não. Cada conta vê somente as próprias fichas técnicas. Suas receitas e custos ficam protegidos.</p></details>
+      <details><summary>As taxas do meu iFood são diferentes. Funciona?</summary><p>Sim. A calculadora vem com as taxas do plano básico do iFood, e você pode trocar pelos percentuais do seu contrato.</p></details>
+      <details><summary>Funciona para confeitaria e para restaurante?</summary><p>Sim. Serve para qualquer produto feito com ingredientes: bolos, doces, salgados, marmitas, lanches, pizzas e açaí.</p></details>
+      <details><summary>E se eu não gostar?</summary><p>Você tem 7 dias de garantia. É só pedir o reembolso pelo WhatsApp que devolvemos o valor inteiro.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- Chamada final -->
+<section>
+  <div class="wrap final">
+    <h2>Pare de vender no prejuízo sem perceber</h2>
+    <p class="lead">Em poucos minutos você descobre o preço certo de cada produto, no balcão e no iFood.</p>
+    <div class="btns" style="justify-content:center">
+      <a class="btn primary" href="#precos">Quero a calculadora</a>
+      <a class="btn ghost wa-link" href="#precos">Falar no WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <span>© <span id="ano">2026</span> Pontes – Consultoria e Gestão de iFood · gestaopontes.com</span>
+    <span><a href="#precos" class="wa-link">WhatsApp</a></span>
+  </div>
+</footer>
+</div>
+
+<a class="wa wa-link" href="#precos" aria-label="Falar com a Pontes no WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.2-.2-.4-.3Z"/></svg>
+</a>
+
+<script>
+// ---------- Configuração: preencha aqui ----------
+const WHATSAPP = '';        // só números, com DDI e DDD. Ex.: '5511999998888'
+const CHECKOUT = {          // links de pagamento (Kiwify, Hotmart, Mercado Pago...)
+  calculadora: '',
+  revisao: ''
+};
+
+(() => {
+  const $ = s => document.querySelector(s);
+  $('#ano').textContent = new Date().getFullYear();
+
+  // Links: sem checkout, o botão abre o WhatsApp; sem WhatsApp, fica em "Planos".
+  const waUrl = msg => WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}` : '#precos';
+  document.querySelectorAll('.wa-link').forEach(a => {
+    a.href = waUrl('Olá! Quero saber mais sobre a Calculadora de CMV da Pontes.');
+    if (WHATSAPP) a.target = '_blank';
+  });
+  document.querySelectorAll('.buy').forEach(a => {
+    const plano = a.dataset.plan === 'revisao' ? 'Calculadora + Revisão (R$ 197)' : 'Calculadora (R$ 97)';
+    a.href = CHECKOUT[a.dataset.plan] || waUrl(`Olá! Quero comprar o plano ${plano}.`);
+    if (a.href.startsWith('http')) a.target = '_blank';
+  });
+
+  // ---------- Simulador (mesmas regras da calculadora) ----------
+  const num = s => { const v = parseFloat(String(s).replace(/\./g, '').replace(',', '.')); return isFinite(v) ? v : 0; };
+  const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  function calc() {
+    const custo = Math.max(0, num($('#sCusto').value));
+    const porc = Math.max(1, Math.floor(num($('#sPorc').value)) || 1);
+    const emb = Math.max(0, num($('#sEmb').value));
+    const cmv = custo / porc;
+    const balcao = cmv / 0.3;
+    let ifood = balcao / 0.82;
+    if ($('#sAlav').checked) ifood /= 0.88;
+    const ok = custo > 0;
+    $('#rCmv').textContent = ok ? brl(cmv) : '–';
+    $('#rBalcao').textContent = ok ? brl(balcao + emb) : '–';
+    $('#rIfood').textContent = ok ? brl(ifood + emb) : '–';
+    const al = $('#rAlert');
+    if (ok) {
+      const perda = (ifood + emb) - (balcao + emb);
+      al.textContent = `Se você cobra no iFood o mesmo preço do balcão, deixa de ganhar cerca de ${brl(perda)} em cada venda.`;
+      al.hidden = false;
+    } else al.hidden = true;
+  }
+  ['#sCusto', '#sPorc', '#sEmb', '#sAlav'].forEach(id => $(id).addEventListener('input', calc));
+  calc();
+})();
+
+// ---------- Fundo "Matrix" (o mesmo da calculadora) ----------
+(() => {
+  const cv = document.getElementById('matrix'), ctx = cv.getContext('2d');
+  const chars = '0123456789R$%÷×+=CMV0101アイウエオカキクケコサシスセソタチツテト';
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let cols = [], fs = 16, w = 0, h = 0, last = 0;
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = innerWidth; h = innerHeight; fs = w < 600 ? 13 : 16;
+    cv.width = w * dpr; cv.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.ceil(w / fs);
+    cols = Array.from({ length: n }, (_, i) => cols[i] ?? { y: Math.random() * h * 1.5 - h * 0.5, v: 0.5 + Math.random() * 0.9 });
+    ctx.fillStyle = '#070C12'; ctx.fillRect(0, 0, w, h);
+  }
+  function frame(t) {
+    requestAnimationFrame(frame);
+    if (document.hidden || t - last < 50) return;
+    last = t;
+    ctx.fillStyle = 'rgba(7,12,18,0.07)'; ctx.fillRect(0, 0, w, h);
+    ctx.font = `${fs}px "JetBrains Mono", monospace`;
+    cols.forEach((c, i) => {
+      const x = i * fs;
+      ctx.fillStyle = 'rgba(125,243,248,0.9)'; ctx.fillText(chars[(Math.random() * chars.length) | 0], x, c.y);
+      ctx.fillStyle = 'rgba(44,197,208,0.55)'; ctx.fillText(chars[(Math.random() * chars.length) | 0], x, c.y - fs);
+      c.y += fs * c.v;
+      if (c.y > h + fs && Math.random() > 0.95) { c.y = Math.random() * -200; c.v = 0.5 + Math.random() * 0.9; }
+    });
+  }
+  resize(); addEventListener('resize', resize);
+  if (reduce) {
+    ctx.font = `${fs}px monospace`; ctx.fillStyle = 'rgba(44,197,208,0.25)';
+    cols.forEach((c, i) => { for (let y = (i * 37) % 120; y < h; y += fs * 3) ctx.fillText(chars[(i + y) % chars.length], i * fs, y); });
+  } else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
