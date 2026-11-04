@@ -130,6 +130,13 @@ label{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em
 .about p{color:var(--muted);margin-top:10px}
 @media (max-width:700px){.about{grid-template-columns:1fr}}
 
+/* Depoimento */
+.quote{display:grid;gap:16px;max-width:820px;margin:0}
+.quote blockquote{margin:0;font-size:clamp(19px,2.4vw,24px);line-height:1.5;font-weight:500;padding-left:22px;border-left:2px solid var(--cyan)}
+.quote blockquote::before{content:"“";display:block;font-family:var(--display);font-size:56px;line-height:.6;color:var(--cyan);margin-bottom:8px}
+.quote cite{font-style:normal;font-family:var(--mono);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.quote cite span{color:var(--muted);text-transform:none;letter-spacing:0;font-family:var(--body);font-size:14px;margin-left:8px}
+
 /* Preços */
 .plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;max-width:860px}
 .plan{display:grid;gap:16px;align-content:start}
@@ -302,6 +309,17 @@ footer{border-top:1px solid var(--line);padding-block:28px 40px;color:var(--mute
   </div>
 </section>
 
+<!-- Depoimento -->
+<section>
+  <div class="wrap">
+    <figure class="panel quote">
+      <span class="eyebrow">Quem já usa</span>
+      <blockquote>A Calculadora é excelente, muito boa mesmo, me deu uma clareza em saber quanto custa cada um dos meus produtos, além de eu conseguir guardar todas as minhas fichas técnicas após preenchidas.</blockquote>
+      <figcaption><cite>Mais Doce por Amor<span>Confeitaria</span></cite></figcaption>
+    </figure>
+  </div>
+</section>
+
 <!-- Preços -->
 <section id="precos">
   <div class="wrap">
@@ -386,7 +404,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 40px;color:var(--mute
 
 <script>
 // ---------- Configuração: preencha aqui ----------
-const WHATSAPP = '';        // só números, com DDI e DDD. Ex.: '5511999998888'
+const WHATSAPP = '5543999643651'; // só números, com DDI e DDD
 const CHECKOUT = {          // links de pagamento (Kiwify, Hotmart, Mercado Pago...)
   calculadora: '',
   revisao: ''
