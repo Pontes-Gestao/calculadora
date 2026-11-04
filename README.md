@@ -70,7 +70,10 @@ const SUPABASE_KEY = 'sb_publishable_...';
 > A chave pública pode ficar no código: quem protege os dados é o login + as regras de segurança (RLS) do `setup.sql`.
 > Nunca coloque a chave `service_role` / `secret` no `index.html`.
 
-> No plano gratuito, o Supabase pausa o projeto depois de 7 dias sem nenhum acesso. Se isso acontecer, é só entrar no painel e clicar em **Restore**.
+> No plano gratuito, o Supabase pausa o projeto depois de 7 dias sem nenhum acesso. Para evitar isso, o GitHub dá um
+> "toque" automático a cada 3 dias ([`.github/workflows/manter-supabase-ativo.yml`](.github/workflows/manter-supabase-ativo.yml)),
+> usando a função `ping` do `setup.sql`. Se o toque falhar, o GitHub manda um e-mail. Se o projeto pausar mesmo assim,
+> é só entrar no painel e clicar em **Resume project**.
 > Continue usando o botão **Backup** de vez em quando.
 
 ## Histórico
