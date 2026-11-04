@@ -1,13 +1,14 @@
 # Calculadora de CMV · Pontes
 
 App da **Pontes – Consultoria e Gestão de iFood**, vendido para restaurantes e confeitarias.
-Um único link para todas as clientes: https://pontes-gestao.github.io/calculadora/
+Um único link para todas as clientes: https://gestaopontes.com/calculadora/ (o link antigo pontes-gestao.github.io/calculadora redireciona)
 
 Converse sempre em português, de forma simples (a dona do projeto não é programadora).
 
 ## Como está montado
 - Tudo em um único `index.html` (HTML + CSS + JS, sem build). Logo em `assets/pontes-logo.webp`.
-- Hospedagem: GitHub Pages do repositório `Pontes-Gestao/calculadora`. **Publicar = enviar para o branch `main`**
+- Hospedagem: GitHub Pages do repositório `Pontes-Gestao/calculadora`, no domínio gestaopontes.com (definido no repositório
+  `Pontes-Gestao/pontes-gestao.github.io`, que tem a página de vendas, a política de privacidade e os termos). **Publicar = enviar para o branch `main`**
   (o site atualiza em ~1 min). Trabalhe num branch e só envie para `main` com o OK da dona.
 - Login e fichas na nuvem: Supabase (projeto `ygxxlavwcpkssqmdrxsr`). Tabela `public.fichas` guarda a ficha inteira
   em `dados` (jsonb), com RLS: cada conta só vê/cria/altera/exclui as próprias fichas. SQL em `supabase/setup.sql`.

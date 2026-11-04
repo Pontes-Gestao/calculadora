@@ -3,7 +3,8 @@
 Calculadora de CMV (Custo de Mercadoria Vendida) e ficha técnica para confeitarias e restaurantes,
 da **Pontes – Consultoria e Gestão de iFood**.
 
-Endereço único para todas as clientes: <https://pontes-gestao.github.io/calculadora/>
+Endereço único para todas as clientes: <https://gestaopontes.com/calculadora/>
+(o link antigo `pontes-gestao.github.io/calculadora` leva para lá sozinho). Página de vendas: <https://gestaopontes.com>
 
 ## O que a calculadora faz
 
@@ -58,7 +59,7 @@ const SUPABASE_KEY = 'sb_publishable_...';
 1. Crie um projeto em <https://supabase.com> (região São Paulo).
 2. **SQL Editor → New query**: cole o conteúdo de [`supabase/setup.sql`](supabase/setup.sql) e clique em **Run**.
 3. **Authentication → URL Configuration**:
-   - *Site URL*: `https://pontes-gestao.github.io/calculadora/`
+   - *Site URL*: `https://gestaopontes.com/calculadora/`
    - *Redirect URLs*: adicione o mesmo endereço.
 4. **Authentication → Sign In / Providers → Email**: desligue *Allow new users to sign up*
    (só você cria as contas das clientes).
