@@ -29,3 +29,9 @@ create policy "fichas: excluir as próprias" on public.fichas for delete to auth
 
 revoke all on public.fichas from anon;
 grant select, insert, update, delete on public.fichas to authenticated;
+
+-- "Toque" automático (GitHub Actions) para o projeto gratuito não pausar.
+-- Só responde "ok": não lê nem mostra nenhuma ficha.
+create or replace function public.ping() returns text language sql stable as $$ select 'ok'::text $$;
+revoke all on function public.ping() from public;
+grant execute on function public.ping() to anon, authenticated;

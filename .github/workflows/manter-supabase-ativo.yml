@@ -1,0 +1,25 @@
+# Dá um "toque" no Supabase a cada 3 dias para o projeto não pausar (plano gratuito pausa após 7 dias sem uso).
+# Usa só a chave pública e não lê nenhuma ficha. Se o toque falhar, o GitHub manda um e-mail avisando.
+name: Manter Supabase ativo
+
+on:
+  schedule:
+    - cron: '17 11 */3 * *'   # a cada 3 dias, por volta das 8h (horário de Brasília)
+  workflow_dispatch:           # botão "Run workflow" para testar na hora
+
+jobs:
+  toque:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tocar o Supabase
+        env:
+          URL: https://ygxxlavwcpkssqmdrxsr.supabase.co
+          KEY: sb_publishable_cCMTCJ8zjGODfgZ17gNnHA_UAbiMFjc
+        run: |
+          code=$(curl -s -o resposta.txt -w '%{http_code}' -X POST "$URL/rest/v1/rpc/ping" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}')
+          echo "Resposta do Supabase: $code"; cat resposta.txt; echo
+          if [ "$code" != "200" ]; then
+            echo "::error::O Supabase não respondeu (código $code). Confira no painel se o projeto está pausado e clique em Resume project."
+            exit 1
+          fi
